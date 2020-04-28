@@ -19,6 +19,14 @@ var App = React.createClass({
 	  this.setState({filestatus:''});
   },
   
+  fetchListOfFiles: function() {
+	    fetch("/tasksvn/praveen/fetchall",{
+	        method: 'GET',
+	        headers: { 'Content-Type': 'application/json' },
+	}).then(function(response) {
+	        return response.json();
+	    }).then(this.getListOfFiles);  
+  },
   getListOfFiles: function(response) {
 	  var obj = {};
 	  for ( var i=0, len=response.length; i < len; i++ )
@@ -61,6 +69,7 @@ var App = React.createClass({
   },
   uploadResponse: function(response){
 	 this.setState({ uploadresponse: response }); 
+	 this.fetchListOfFiles()
   },
   changeVersion: function(event){
       this.setState({version: event.target.value});
@@ -91,8 +100,6 @@ var App = React.createClass({
 	  this.setState({files: []});
 	  this.setState({versions: []});
 	  this.setState({content:{}});
-	  this.setState({uploadresponse:{}});
-	  this.setState({contentvalue:''});
 	  this.setState({filestatus:'file edited successfully'});
   },
   onFileChange: function(event){
