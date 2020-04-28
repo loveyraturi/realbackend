@@ -20,10 +20,18 @@ var App = React.createClass({
   },
   
   getListOfFiles: function(response) {
+	  var obj = {};
+	  for ( var i=0, len=response.length; i < len; i++ )
+	      obj[response[i]['filename']] = response[i];
+
+	  response = new Array();
+	  for ( var key in obj )
+		  response.push(obj[key]);
+	  
 	this.setState({
 	  files: response
 	});
-	this.setStart({uploadresponse:{}});
+	this.setState({uploadresponse:{}});
   },
   getContent: function(response) {
 	this.setState({
