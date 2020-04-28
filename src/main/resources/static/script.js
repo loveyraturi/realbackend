@@ -4,7 +4,7 @@ var App = React.createClass({
   },
 
   componentDidMount: function() {
-    fetch("/praveen/fetchall",{
+    fetch("/tasksvn/praveen/fetchall",{
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
 }).then(function(response) {
@@ -41,7 +41,7 @@ var App = React.createClass({
   },
   change: function(event){
       this.setState({filename: event.target.value});
-      fetch("/praveen/fetchfilebyname/"+event.target.value,{
+      fetch("/tasksvn/praveen/fetchfilebyname/"+event.target.value,{
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
   }).then(function(response) {
@@ -52,7 +52,7 @@ var App = React.createClass({
 	  const formData = new FormData();
 
 	  formData.append('file', this.state.selectedFile);
-      fetch("/praveen/uploadfile/",{
+      fetch("/tasksvn/praveen/uploadfile/",{
           method: 'POST',
           body: formData,
   }).then(function(response) {
@@ -64,7 +64,7 @@ var App = React.createClass({
   },
   changeVersion: function(event){
       this.setState({version: event.target.value});
-      fetch("/praveen/readfile/"+event.target.value+"/"+this.state.filename,{
+      fetch("/tasksvn/praveen/readfile/"+event.target.value+"/"+this.state.filename,{
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
   }).then(function(response) {
@@ -78,7 +78,7 @@ var App = React.createClass({
         content: this.state.contentvalue,
     	filename: this.state.filename
       }
-      fetch("/praveen/editfile/",{
+      fetch("/tasksvn/praveen/editfile/",{
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(resp)
