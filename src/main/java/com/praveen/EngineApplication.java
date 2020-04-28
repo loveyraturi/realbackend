@@ -13,7 +13,7 @@ import com.praveen.controller.EngineController;
 
 @SpringBootApplication
 @ComponentScan({"com.praveen.service","com.praveen.controller","com.praveen.dao","com.praveen.model"})
-public class EngineApplication {
+public class EngineApplication extends SpringBootServletInitializer {
 //SpringBootDemoApplication
 
 	public static void main(String[] args) {
