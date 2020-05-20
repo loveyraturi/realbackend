@@ -1,5 +1,6 @@
 package com.praveen.controller;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -49,167 +51,225 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
-import com.praveen.model.Versions;
-import com.praveen.service.VersionsService;
+import com.praveen.dao.LeadsRepository;
+import com.praveen.model.Campaing;
+import com.praveen.model.CampaingLeadMapping;
+import com.praveen.model.GroupCampaingMapping;
+import com.praveen.model.Leads;
+import com.praveen.model.UserGroup;
+import com.praveen.model.UserGroupMapping;
+import com.praveen.model.Users;
+import com.praveen.service.CampaingService;
+import com.praveen.service.LeadsService;
+import com.praveen.service.UserGroupService;
+import com.praveen.service.UsersService;
 
 @RestController
-@RequestMapping("/praveen")
+@RequestMapping("/goautodial")
 public class EngineController {
 
 	@Autowired
 	private HttpServletRequest request;
 
 	@Autowired
-	private VersionsService versionsService;
+	private UsersService usersService;
+
+	@Autowired
+	UserGroupService userGroupService;
+	@Autowired
+	CampaingService campaingService;
+	@Autowired
+	LeadsService leadsService;
 
 	@GetMapping("/")
 	public String getEmployees() {
 		return "hihihi";
 	}
+
+	@PostMapping(path = "/validateuser", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> validateUser(@RequestBody(required = true) Map<String, String> resp) {
+		return usersService.validateUser(resp);
+	}
 	
-	@GetMapping("/fetchall")
-	public ArrayList<Versions> fetchall() {
-		return versionsService.fetchAllVersions();
-	}
-	@GetMapping("/fetchfilebyname/{name}")
-	public ArrayList<Versions> fetchFileByName(@PathVariable("name") String name) {
-		return versionsService.fetchByName(name);
-	}
-	@GetMapping("fetchfilebynameandversion/{version}/{name}")
-	public List<Versions> fetchFileByName(@PathVariable("name") String name,@PathVariable("version") String version) {
-		return versionsService.fetchByFilenameAndVersions(name,version);
-	}
-
-	@PostMapping("/uploadfile")
+	@PostMapping(path = "/statusCall", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String, String> uploadFile(@RequestParam("file") MultipartFile multipartFile) {
-		String fileResponse = null;
-		File file;
+	public Map<String, String> statusCall(@RequestBody(required = true) Map<String, String> resp) {
+		
+		return usersService.validateUser(resp);
+	}
+	@PostMapping(path = "/loadCsv", consumes = "multipart/form-data", produces = "application/json")
+	public Map<String, String> loadCsv(@RequestParam("file") MultipartFile file) {
+		Reader reader = null;
 		try {
-			file = ResourceUtils.getFile("classpath:");
-			System.out.println(file.getAbsolutePath());
-			String filepath = file.getAbsolutePath() + "/" + multipartFile.getOriginalFilename() + "v1";
-			File newFile = new File(filepath);
-			// Creating the directory
-			boolean bool = newFile.mkdir();
-			if (bool) {
-				byte[] bytes = multipartFile.getBytes();
-				Path path = Paths.get(filepath + "/" + multipartFile.getOriginalFilename());
-				Files.write(path, bytes);
-				fileResponse = "File successfully uploaded";
-				Map<String, String> daoResponse = new HashMap<>();
-				daoResponse.put("filename", multipartFile.getOriginalFilename());
-				daoResponse.put("version", "v1");
-				versionsService.saveVersion(daoResponse);
-			} else {
-				fileResponse = "This file already have a version";
-			}
-
-		} catch (Exception e) {
+			reader = new InputStreamReader(file.getInputStream());
+		
+//			CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build();
+	       CSVParser parser = new CSVParser( reader, CSVFormat.DEFAULT );
+	        List<CSVRecord> list = parser.getRecords();
+	        UserGroup userGroup=new UserGroup();
+    		userGroup.setActive("Y");
+    		userGroup.setName(list.get(2).get(4));
+    		Campaing campaing = new Campaing();
+    		campaing.setActive("Y");
+    		campaing.setDialPrefix("555");
+    		campaing.setDialTimeout("100");
+    		campaing.setLocalCallTime("9AM - 10PM");
+    		campaing.setManualDialPrefix("555");
+    		campaing.setName(list.get(2).get(3));
+	        for( int j=1;j<list.size();j++) {
+//	        	for(int i=0;i<=list.get(j).size();i++) {
+	        		Users user= new Users();
+	        		user.setFullName(list.get(j).get(1));
+	        		user.setUsername(list.get(j).get(1));
+	        		user.setPassword(list.get(j).get(2));
+	        		user.setLevel(Integer.parseInt(list.get(j).get(5)));
+	        		
+	        		UserGroupMapping userGroupMapping =new UserGroupMapping();
+	        		userGroupMapping.setGroupname(userGroup.getName());
+	        		userGroupMapping.setUsername(user.getUsername());
+	        		GroupCampaingMapping gcm = new GroupCampaingMapping();
+	        		gcm.setCampaingname(campaing.getName());
+	        		gcm.setGroupname(userGroup.getName());
+	        		usersService.loadCSV(user,campaing,userGroup,userGroupMapping,gcm);
+//	        	}
+	        }
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		Map<String, String> response = new HashMap<String, String>();
-
-		response.put("status", fileResponse);
-		response.put("filename", multipartFile.getOriginalFilename());
-		return response;
-
-	}
-
-	@PostMapping(path = "/editfile", consumes = "application/json", produces = "application/json")
-	@ResponseBody
-	public Map<String, String> editFile(@RequestBody(required = true) Map<String, String> resp) {
-		Map<String, String> response = new HashMap<String, String>();
-		StringBuilder newversion = new StringBuilder();
-		newversion.append("v");
-		int newVersionIndex = Integer.parseInt(resp.get("version").substring(1, resp.get("version").length())) + 1;
-		newversion.append(newVersionIndex);
-
-		File file;
-		try {
-			file = ResourceUtils.getFile("classpath:");
-			System.out.println(file.getAbsolutePath());
-			String filepath = file.getAbsolutePath() + "/" + resp.get("filename") + newversion.toString();
-			File newFile = new File(filepath);
-			// Creating the directory
-			boolean bool = newFile.mkdir();
-			if (bool) {
-				byte[] bytes = resp.get("content").getBytes();
-				Path path = Paths.get(filepath + "/" + resp.get("filename"));
-				Files.write(path, bytes);
-				Map<String, String> daoResponse = new HashMap<>();
-				daoResponse.put("filename", resp.get("filename"));
-				daoResponse.put("version", newversion.toString());
-				versionsService.saveVersion(daoResponse);
-				response.put("status", "File edited Successfully");
-			} else {
-				byte[] bytes = resp.get("content").getBytes();
-				Path path = Paths.get(file.getAbsolutePath() + "/" + resp.get("filename")+resp.get("version")+"/" + resp.get("filename"));
-				Files.write(path, bytes);
-				String maxVersion=versionsService.findMaxVersionByName(resp.get("filename"));
-				int latestversion=Integer.parseInt(maxVersion.substring(1,maxVersion.length()));
-				int currentVersion=Integer.parseInt(resp.get("version").substring(1, resp.get("version").length()));
-				System.out.println(latestversion);
-				for(int i=currentVersion+1;i<=latestversion;i++) {
-					System.out.println(file.getAbsolutePath() + "/" + resp.get("filename")+"v"+i);
-					File currentFile = new File(file.getAbsolutePath() + "/" + resp.get("filename")+"v"+i);
-					boolean status=VersionsService.deleteDirectory(currentFile);
-				    System.out.println(status);
-				    versionsService.deleteByVersionAndFilename("v"+i, resp.get("filename"));
-				    System.out.println("############################");
-				}
-				
-				response.put("status", "File version does not exist");
-			}
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			response.put("status", e.getMessage());
-		}
+		Map<String, String> response = new HashMap<>();
 		return response;
 	}
-
-	@GetMapping(path = "/readfile/{version}/{filename}", consumes = "application/json", produces = "application/json")
-	@ResponseBody
-	public Map<String, String> readFile(@PathVariable("filename") String filename,
-			@PathVariable("version") String version) {
-		System.out.println("#################################");
-		File file;
-		StringBuilder content = new StringBuilder();
+	
+	@PostMapping(path = "/loadCsvLead", consumes = "multipart/form-data", produces = "application/json")
+	public Map<String, String> loadCsvLead(@RequestParam("file") MultipartFile file) {
+		Reader reader = null;
 		try {
-			file = ResourceUtils.getFile("classpath:");
-			System.out.println(file.getAbsolutePath());
-			String filepath = file.getAbsolutePath() + "/" + filename + version + "/" + filename;
-
-			try (Stream<String> stream = Files.lines(Paths.get(filepath), StandardCharsets.UTF_8)) {
-				stream.forEach(s -> content.append(s).append("\n"));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-		} catch (Exception e) {
+			reader = new InputStreamReader(file.getInputStream());
+		
+//			CSVReader csvReader = new CSVReaderBuilder(reader).withSkipLines(1).build();
+	       CSVParser parser = new CSVParser( reader, CSVFormat.DEFAULT );
+	        List<CSVRecord> list = parser.getRecords();
+	        for( int j=1;j<list.size();j++) {
+Leads leads = new Leads();
+leads.setFirstName(list.get(j).get(2));
+leads.setCity(list.get(j).get(5));
+leads.setState(list.get(j).get(6));
+leads.setStatus("ACTIVE");
+leads.setLastName(list.get(j).get(2));
+leads.setPhoneNumber(list.get(j).get(0));
+leads.setCity(list.get(j).get(5));
+leads.setPostalCode(list.get(j).get(4));
+leads.setAddress1(list.get(j).get(3));
+leads.setEmail(list.get(j).get(7));
+	        		usersService.loadCSVLead(leads);
+//	        	}
+	        }
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		Map<String, String> response = new HashMap<String, String>();
-		response.put("filename", filename);
-		response.put("content", content.toString());
-
+		Map<String, String> response = new HashMap<>();
 		return response;
 	}
 
-	@GetMapping(path = "/switchversion/{version}", consumes = "application/json", produces = "application/json")
+	@PostMapping(path = "/createUserGroup", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String, String> readFile(@PathVariable("version") String version) {
-
-		Map<String, String> response = new HashMap<String, String>();
-		response.put("filename", "switched version");
+	public Map<String, String> createUserGroup(@RequestBody(required = true) Map<String, String> request) {
+		userGroupService.createUserGroup(request);
+		Map<String, String> response = new HashMap<>();
 		return response;
+	}
+
+	@PostMapping(path = "/createCampaing", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> createCampaing(@RequestBody(required = true) Map<String, String> request) {
+		campaingService.createCampaing(request);
+		Map<String, String> response = new HashMap<>();
+		return response;
+	}
+
+	@PostMapping(path = "/createLead", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> createLead(@RequestBody(required = true) Map<String, String> request) {
+		leadsService.createLead(request);
+		Map<String, String> response = new HashMap<>();
+		return response;
+	}
+
+	@PostMapping(path = "/attachLeadToCampaing", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> attachLeadToCampaing(@RequestBody(required = true) Map<String, String> request) {
+		leadsService.attachLeadToCampaing(request);
+		Map<String, String> response = new HashMap<>();
+		return response;
+	}
+
+	@PostMapping(path = "/attachUserGroupToCampaing", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> attachUserGroupToCampaing(@RequestBody(required = true) Map<String, String> request) {
+		campaingService.attachUserGroupToCampaing(request);
+		Map<String, String> response = new HashMap<>();
+		return response;
+	}
+
+	@PostMapping(path = "/createUserWithGroup", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> createUserWithGroup(@RequestBody(required = true) Map<String, String> request) {
+		usersService.createUserWithGroup(request);
+		Map<String, String> response = new HashMap<>();
+		return response;
+	}
+
+	@PostMapping(path = "/createUser", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> createUser(@RequestBody(required = true) Map<String, String> request) {
+		usersService.createUser(request);
+		Map<String, String> response = new HashMap<>();
+		return response;
+	}
+
+	
+	@PostMapping(path = "/feedback", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> feedback(@RequestBody(required = true) Map<String, String> request) {
+		leadsService.feedback(request);
+		Map<String, String> response = new HashMap<>();
+		return response;
+	}
+	
+	@GetMapping(path = "/findGroupById/{id}")
+	@ResponseBody
+	public Optional<UserGroup> findGroupById(@PathVariable("id") int id) {
+		return userGroupService.fetchUserGroupById(id);
+	}
+
+	@GetMapping(path = "/fetchCampaing")
+	@ResponseBody
+	public String fetchCampaing() {
+		List<String> campaingName = new ArrayList<>();
+		campaingService.fetchCampaing().forEach((campaing) -> {
+			campaingName.add(campaing.getName());
+		});
+		return String.join(",", campaingName);
+	}
+	
+	
+	
+
+	@GetMapping(path = "/fetchLeadsByUserAndCampaing/{username}/{campaing}")
+	@ResponseBody
+	public List<Leads> fetchLeadsByUserAndCampaing(@PathVariable("username") String username,
+			@PathVariable("campaing") String campaing) {
+		Map<String, String> request = new HashMap<>();
+		request.put("username", username);
+		request.put("campaing", campaing);
+		return usersService.fetchLeadsByUserAndCampaing(request);
 	}
 
 }
