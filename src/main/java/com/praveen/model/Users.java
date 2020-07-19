@@ -22,72 +22,114 @@ import javax.persistence.Table;
 public class Users {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	private String username;
 	private String password;
 	private int level;
 	private String fullName;
 	private String usergroup;
+	private String status;
+	private String online;
+	private String deviceId;
 	Date dateCreated;
 	Date DateModified;
-//	@ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn (name="id",referencedColumnName = "id", insertable = false, updatable = false)
-//	private UserGroup userGroup;
-	
 
-//	public UserGroup getUserGroup() {
-//		return userGroup;
-//	}
-//	public void setUserGroup(UserGroup userGroup) {
-//		this.userGroup = userGroup;
-//	}
+	// @ManyToOne(fetch = FetchType.LAZY)
+	// @JoinColumn (name="id",referencedColumnName = "id", insertable = false,
+	// updatable = false)
+	// private UserGroup userGroup;
+
+	public String getStatus() {
+		return status;
+	}
+
+	public String getDeviceId() {
+		return deviceId;
+	}
+
+	public void setDeviceId(String deviceId) {
+		this.deviceId = deviceId;
+	}
+
+	public String getOnline() {
+		return online;
+	}
+
+	public void setOnline(String online) {
+		this.online = online;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	// public UserGroup getUserGroup() {
+	// return userGroup;
+	// }
+	// public void setUserGroup(UserGroup userGroup) {
+	// this.userGroup = userGroup;
+	// }
 	public String getUsername() {
 		return username;
 	}
+
 	public void setUsername(String username) {
 		this.username = username;
 	}
+
 	public String getPassword() {
 		return password;
 	}
+
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
 	public String getFullName() {
 		return fullName;
 	}
+
 	public void setFullName(String fullName) {
 		this.fullName = fullName;
 	}
+
 	public Date getDateCreated() {
 		return dateCreated;
 	}
+
 	public void setDateCreated(Date dateCreated) {
 		this.dateCreated = dateCreated;
 	}
+
 	public Date getDateModified() {
 		return DateModified;
 	}
+
 	public void setDateModified(Date dateModified) {
 		DateModified = dateModified;
 	}
+
 	public int getId() {
 		return id;
 	}
+
 	public void setId(int id) {
 		this.id = id;
 	}
-	
+
 	public int getLevel() {
 		return level;
 	}
+
 	public void setLevel(int level) {
 		this.level = level;
 	}
+
 	public String getUsergroup() {
 		return usergroup;
 	}
+
 	public void setUsergroup(String usergroup) {
 		this.usergroup = usergroup;
 	}

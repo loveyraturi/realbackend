@@ -15,5 +15,12 @@ import com.praveen.model.UserGroupMapping;
 import com.praveen.model.Users;
 
 public interface GroupCampaingMappingRepository extends JpaRepository<GroupCampaingMapping, Integer> {
-	
+	@Query(value = "select * from group_campaing_mapping  where groupname=:groupname ", nativeQuery = true)
+	List<GroupCampaingMapping> findByGroupName(@Param("groupname") String groupname);
+
+	@Query(value = "select distinct groupname from group_campaing_mapping  where campaingname=:campaingname ", nativeQuery = true)
+	List<String> findDistinctGroupByCampaingName(@Param("campaingname") String campaingname);
+
+	@Query(value = "select * from group_campaing_mapping  where campaingname=:campaingname ", nativeQuery = true)
+	GroupCampaingMapping findGroupByCampaingName(@Param("campaingname") String campaingname);
 }

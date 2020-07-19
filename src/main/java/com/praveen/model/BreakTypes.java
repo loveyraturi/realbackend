@@ -5,20 +5,25 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 @Entity
-@Table(name = "CampaingLeadMapping")
-public class CampaingLeadMapping {
+@Table(name = "breakTypes")
+public class BreakTypes {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	int id;
+	String breakType;
 	String campaingName;
-	String leadVersionName;
 	public int getId() {
 		return id;
 	}
 	public void setId(int id) {
 		this.id = id;
+	}
+	public String getBreakType() {
+		return breakType;
+	}
+	public void setBreakType(String breakType) {
+		this.breakType = breakType;
 	}
 	public String getCampaingName() {
 		return campaingName;
@@ -26,12 +31,5 @@ public class CampaingLeadMapping {
 	public void setCampaingName(String campaingName) {
 		this.campaingName = campaingName;
 	}
-	public String getLeadVersionName() {
-		return leadVersionName;
-	}
-	public void setLeadVersionName(String leadVersionName) {
-		this.leadVersionName = leadVersionName;
-	}
-	
 	
 }

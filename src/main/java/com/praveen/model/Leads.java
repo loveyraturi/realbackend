@@ -23,24 +23,19 @@ public class Leads {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	int id;
 	String name;
+	String assignedTo;
 	String phoneNumber;
 	String firstName;
-	String status;
-	String middleName;
-	String lastName;
-	String address1;
-	String address2;
-	String address3;
 	String city;
 	String state;
-	String postalCode;
-	String countryCode;
-	String gender;
-	String alternatePhonenumber;
 	String email;
+	String crm;
+	String status;
+	String callBackDateTime;
 	String comments;
 	String lastLocalCallTime;
 	int callCount;
+	String filename;
 	Date dateCreated;
 	Date DateModified;
 //	@ManyToOne(fetch = FetchType.LAZY)
@@ -58,6 +53,47 @@ public class Leads {
 	public int getId() {
 		return id;
 	}
+
+	
+	public String getCrm() {
+		return crm;
+	}
+
+
+	public void setCrm(String crm) {
+		this.crm = crm;
+	}
+
+
+	public String getCallBackDateTime() {
+		return callBackDateTime;
+	}
+
+
+	public void setCallBackDateTime(String callBackDateTime) {
+		this.callBackDateTime = callBackDateTime;
+	}
+
+
+	public String getAssignedTo() {
+		return assignedTo;
+	}
+
+
+	public void setAssignedTo(String assignedTo) {
+		this.assignedTo = assignedTo;
+	}
+
+
+	public String getFilename() {
+		return filename;
+	}
+
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
+
 
 	public void setId(int id) {
 		this.id = id;
@@ -95,46 +131,6 @@ public class Leads {
 		this.status = status;
 	}
 
-	public String getMiddleName() {
-		return middleName;
-	}
-
-	public void setMiddleName(String middleName) {
-		this.middleName = middleName;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
-	public String getAddress1() {
-		return address1;
-	}
-
-	public void setAddress1(String address1) {
-		this.address1 = address1;
-	}
-
-	public String getAddress2() {
-		return address2;
-	}
-
-	public void setAddress2(String address2) {
-		this.address2 = address2;
-	}
-
-	public String getAddress3() {
-		return address3;
-	}
-
-	public void setAddress3(String address3) {
-		this.address3 = address3;
-	}
-
 	public String getCity() {
 		return city;
 	}
@@ -150,39 +146,7 @@ public class Leads {
 	public void setState(String state) {
 		this.state = state;
 	}
-
-	public String getPostalCode() {
-		return postalCode;
-	}
-
-	public void setPostalCode(String postalCode) {
-		this.postalCode = postalCode;
-	}
-
-	public String getCountryCode() {
-		return countryCode;
-	}
-
-	public void setCountryCode(String countryCode) {
-		this.countryCode = countryCode;
-	}
-
-	public String getGender() {
-		return gender;
-	}
-
-	public void setGender(String gender) {
-		this.gender = gender;
-	}
-
-	public String getAlternatePhonenumber() {
-		return alternatePhonenumber;
-	}
-
-	public void setAlternatePhonenumber(String alternatePhonenumber) {
-		this.alternatePhonenumber = alternatePhonenumber;
-	}
-
+	
 	public String getEmail() {
 		return email;
 	}

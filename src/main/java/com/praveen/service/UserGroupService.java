@@ -1,5 +1,6 @@
 package com.praveen.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,9 +11,11 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.praveen.dao.GroupCampaingMappingRepository;
 import com.praveen.dao.UserGroupMappingRepository;
 import com.praveen.dao.UserGroupRepository;
 import com.praveen.dao.UsersRepository;
+import com.praveen.model.GroupCampaingMapping;
 import com.praveen.model.UserGroup;
 import com.praveen.model.UserGroupMapping;
 import com.praveen.model.Users;
@@ -26,6 +29,8 @@ public class UserGroupService {
 	UsersRepository userRepository;
 	@Autowired
 	UserGroupMappingRepository userGroupMappingRepository;
+	@Autowired
+	GroupCampaingMappingRepository groupCampaingMappingRepository;
 
 	public Optional<UserGroup> fetchUserGroupById(Integer id) {
 		return userGroupRepository.findById(id);
@@ -37,6 +42,22 @@ public class UserGroupService {
 		userGroup.setName(request.get("name"));
 		userGroupRepository.save(userGroup);
 	}
+	
+		
+	public List<Map<String,Object>> fetchGroupsWithCampaings() {
+		List<Map<String,Object>> responseList= new ArrayList<Map<String,Object>>();
+		 userGroupRepository.findAll().forEach((items)->{
+			 Map<String,Object> response= new  HashMap<>();
+			 response.put("groupName", items.getName());
+			 response.put("status", items.getActive());
+			 List<GroupCampaingMapping> groupCampaingMappingList= groupCampaingMappingRepository.findByGroupName(items.getName());
+		 response.put("campaingList", groupCampaingMappingList);
+		 responseList.add(response);
+		 });
+		 System.out.println(responseList);
+		 return responseList;
+	}
+
 
 	public void attachUserToGroup(Map<String, String> request) {
 		Optional<Users> user = userRepository.findById(Integer.parseInt(request.get("user_id")));

@@ -27,12 +27,26 @@ public class Campaing {
 	String active;
 	String localCallTime;
 	String dialTimeout;
+	String assignmentType;
 	String dialPrefix;
 	String manualDialPrefix;
+	String additionalField;
 	Date dateCreated;
 	Date DateModified;
 	
 
+	public String getAdditionalField() {
+		return additionalField;
+	}
+	public void setAdditionalField(String additionalField) {
+		this.additionalField = additionalField;
+	}
+	public String getAssignmentType() {
+		return assignmentType;
+	}
+	public void setAssignmentType(String assignmentType) {
+		this.assignmentType = assignmentType;
+	}
 	public String getLocalCallTime() {
 		return localCallTime;
 	}
