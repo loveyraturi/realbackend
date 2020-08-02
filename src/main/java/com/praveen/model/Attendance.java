@@ -18,10 +18,17 @@ public class Attendance {
 	Date loggedInTime;
 	Date loggedOutTime;
 	String totalWorkHour;
+	String deviceId;
 	int hours;
 	int minute;
 	int seconds;
 	
+	public String getDeviceId() {
+		return deviceId;
+	}
+	public void setDeviceId(String deviceId) {
+		this.deviceId = deviceId;
+	}
 	public int getHours() {
 		return hours;
 	}

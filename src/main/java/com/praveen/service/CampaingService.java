@@ -2,6 +2,7 @@ package com.praveen.service;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +15,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -51,9 +54,9 @@ public class CampaingService {
 		Map<String,String> response = new HashMap<>();
 		Status status= statusRepository.findStatusCampaingName(CampaingName);
 		if(status!=null) {
-			response.put("status",status.getStatus());
+			response.put("statusFeedback",status.getStatus());
 		}else {
-			response.put("status","");
+			response.put("statusFeedback","");
 		}
 		 
 		return response;
@@ -101,15 +104,125 @@ public class CampaingService {
 				e.printStackTrace();
 			}
 		}
-		 
-		return response;
+//		ArrayNode arrayNode = mapper.createArrayNode();
+		 ObjectNode crmResponse = mapper.createObjectNode();
+////		System.out.println(response);
+//		  Iterator<Map.Entry<String, JsonNode>> nodes = response.fields();
+//		  Map.Entry<String, JsonNode> node = null;
+//		  while (nodes.hasNext()) {
+//			 ObjectNode crmCampaing = mapper.createObjectNode();
+//		    node = nodes.next();
+////		     System.out.println(node.getKey());
+////		     System.out.println(node.getValue());
+//		     crmCampaing.put("label", node.getKey());
+//		     crmCampaing.put("field", node.getValue());
+//		     arrayNode.add(crmCampaing);
+//		  }
+		  crmResponse.put("crm", response);
+//		  System.out.println(arrayNode);
+//		for (String key : response.fieldNames())
+//		{
+//		    if ("foo".equals(key))
+//		    {
+//		        // bar
+//		    }
+//		}
+//		System.out.println(response.get(0));
+//		ObjectNode user = mapper.createObjectNode();
+//	    user3.put("id", 3);
+//	    user3.put("name", "Emma Doe");
+
+	    // create `ArrayNode` object
+	    
+
+	    // add JSON users to array
+//	    arrayNode.addAll(Arrays.asList(user1, user2, user3));
+		return crmResponse;
 	}
 	
-
+	public void convert() {
+		leadsRepository.findAll().forEach((leads)->{
+			JsonNode response = null;
+			ObjectMapper mapper = new ObjectMapper();
+				
+					String fields=leads.getCrm()!=null?leads.getCrm():"";
+					System.out.println(fields.isEmpty());
+					if(!fields.isEmpty()) {
+						System.out.println("inside");
+					 try {
+						response = mapper.readTree(fields);
+					} catch (JsonMappingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (JsonProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					}else {
+						try {
+							response = mapper.readTree("{}");
+						} catch (JsonMappingException e) {
+							e.printStackTrace();
+						} catch (JsonProcessingException e) {
+							e.printStackTrace();
+						}
+					}
+				ArrayNode arrayNode = mapper.createArrayNode();
+				 ObjectNode crmResponse = mapper.createObjectNode();
+				  Iterator<Map.Entry<String, JsonNode>> nodes = response.fields();
+				  Map.Entry<String, JsonNode> node = null;
+				  while (nodes.hasNext()) {
+					 ObjectNode crmCampaing = mapper.createObjectNode();
+				    node = nodes.next();
+				     crmCampaing.put("label", node.getKey());
+				     crmCampaing.put("field", node.getValue());
+				     arrayNode.add(crmCampaing);
+				  }
+//				  crmResponse.put("crm", arrayNode);
+				  String json= "{}";
+				try {
+					json = new ObjectMapper().writeValueAsString(arrayNode);
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				  leads.setCrm(json);
+			leadsRepository.save(leads);
+		});
+	}
+	
 	public List<Campaing> fetchCampaing() {
 		return campaingRepository.findAll();
 	}
-
+	public void updateCrm(int id,Map<String,List<Map<String, String>>> request) {
+		
+//		Map<String,String> response= new HashMap<>();
+//		request.get("crm").forEach((items)->{
+//			System.out.println(items);
+//			response.put(items.get("label"), items.get("field"));
+//			
+//		});
+//		
+//		for(Map.Entry<String, String> crm:request.entrySet()) {
+//			crmMap.put("label", crm.getKey());
+//			crmMap.put("field", crm.getValue());
+//		}
+		System.out.println("######################");
+		System.out.println(request);
+		Leads leads = leadsRepository.findById(id).get();
+		if(leads!=null) {
+			String json="{}";
+			try {
+				json = new ObjectMapper().writeValueAsString(request.get("crm"));
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println(json);
+			leads.setCrm(json);
+			leadsRepository.save(leads);
+		}
+	}
 	public void createCampaing(Map<String, Object> request) {
 		Gson gson = new Gson();
 		String additionalFields=gson.toJson(request.get("additionalFields"));

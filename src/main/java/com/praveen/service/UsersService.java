@@ -5,6 +5,10 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.fabric.xmlrpc.base.Array;
 import com.praveen.dao.AttendanceRepository;
 import com.praveen.dao.BreakTypesRepository;
@@ -116,6 +120,31 @@ public class UsersService {
 		return response;
 	}
 
+	public void uploadFile(MultipartFile file, String filePath, String username,String leadId,String campaing) {
+		try {
+			System.out.println(filePath + file.getOriginalFilename());
+			byte[] bytes = file.getBytes();
+			BufferedOutputStream stream = new BufferedOutputStream(
+					new FileOutputStream(new File(filePath + file.getOriginalFilename())));
+			stream.write(bytes);
+			stream.close();
+			Recordings recordings = new Recordings();
+			recordings.setRecordingName(file.getOriginalFilename());
+			if(username!=null) {
+			recordings.setUsername(username);
+			}
+			if(leadId!=null) {
+			recordings.setLeadId(Integer.parseInt(leadId));
+			}
+			if(campaing!=null) {
+			recordings.setCampaing(campaing);
+			}
+			recordingRepository.save(recordings);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void uploadFile(MultipartFile file, String filePath, String username) {
 		try {
 			System.out.println(filePath + file.getOriginalFilename());
@@ -162,6 +191,7 @@ public class UsersService {
 					Attendance attendance = new Attendance();
 					attendance.setUsername(user.getUsername());
 					attendance.setLoggedInTime(new Timestamp((new Date()).getTime()));
+					attendance.setDeviceId(request.get("device_id"));
 					attendanceRepository.save(attendance);
 
 					// Attendance attendance = new Attendance();
@@ -209,14 +239,17 @@ public class UsersService {
 		});
 		return users;
 	}
-
-	public List<Leads> fetchLeadsByUserAndCampaing(Map<String, String> request) {
+	public List<Users> fetchOnlineUsersByCampaingName(String campaingName) {
+		return userRepository.fetchOnlineUsersByCampaingName(campaingName);
+	}
+	public List<Map<String, Object>> fetchLeadsByUserAndCampaing(Map<String, String> request) {
 		List<Leads> response = new ArrayList<>();
 		userGroupMappingRepository.findGroupByUsername(request.get("username")).forEach((groupMapping) -> {
 			List<Campaing> campaings = campaingRepository.findCampaingByGroupName(groupMapping.getGroupname(),
 					request.get("campaing"));
 			// int count=0;
 			campaings.forEach((campaing) -> {
+//				campaing.getAssignmentType()
 				List<String> filenames = leadsRepository.findLeadsVersionsByCampaingName(campaing.getName());
 				List<Leads> leads = leadsRepository.findLeadsByFilename(filenames);
 				response.addAll(leads);
@@ -234,7 +267,52 @@ public class UsersService {
 				leadsRepository.save(currentLead);
 			}
 		}
-		return response;
+		List<Map<String,Object>> respList=new ArrayList<>();
+		
+		response.forEach((items)->{
+			JsonNode responseCrm = null;
+			ObjectMapper mapper = new ObjectMapper();
+			String fields=items.getCrm();
+			if(!fields.isEmpty()) {
+				System.out.println("inside");
+			 try {
+				 responseCrm = mapper.readTree(fields);
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonProcessingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			}else {
+				try {
+					responseCrm = mapper.readTree("{}");
+				} catch (JsonMappingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (JsonProcessingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			Map<String,Object> resp=new HashMap<>();
+			resp.put("id",items.getId());
+			resp.put("name",items.getName());
+			resp.put("assignedTo",items.getAssignedTo());
+			resp.put("phoneNumber",items.getPhoneNumber());
+			resp.put("firstName",items.getFirstName());
+	        resp.put("city",items.getCity());
+	        resp.put("state",items.getState());
+	        resp.put("email",items.getEmail());
+	        resp.put("crm",responseCrm);
+	        resp.put("status",items.getStatus());
+	        resp.put("callCount",items.getCallCount());
+	        resp.put("filename",items.getFilename());
+	        resp.put("dateCreated",items.getDateCreated());
+	        resp.put("dateModified",items.getDateModified());
+	        respList.add(resp);
+		});
+		return respList;
 	}
 
 	public void createLead(Leads leads) {

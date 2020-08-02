@@ -15,7 +15,21 @@ public class Recordings {
 	int id;
 	String username;
 	String recordingName;
+	String campaing;
+	int leadId;
 	
+	public String getCampaing() {
+		return campaing;
+	}
+	public void setCampaing(String campaing) {
+		this.campaing = campaing;
+	}
+	public int getLeadId() {
+		return leadId;
+	}
+	public void setLeadId(int leadId) {
+		this.leadId = leadId;
+	}
 	public int getId() {
 		return id;
 	}

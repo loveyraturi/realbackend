@@ -64,6 +64,7 @@ import org.json.JSONObject;
 
 import com.praveen.model.Recordings;
 import com.praveen.model.BreakTypes;
+import com.praveen.model.CallLogs;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.praveen.dao.CampaingLeadMappingRepository;
 import com.praveen.dao.CampaingRepository;
@@ -95,7 +96,6 @@ public class EngineController {
 
 	@Autowired
 	private HttpServletRequest request;
-
 	@Autowired
 	private UsersService usersService;
     @Autowired
@@ -163,12 +163,13 @@ public class EngineController {
 	
 	@CrossOrigin
 	@PostMapping("/uploadFile")
-    public Map<String,String> uploadFile(@RequestParam("file") MultipartFile file,@RequestParam("username") String username) {
-                usersService.uploadFile(file,reportingLocation,username);
+    public Map<String,String> uploadFile(@RequestParam("file") MultipartFile file,@RequestParam("username") String username,@RequestParam("leadId") String leadId,@RequestParam("campaing") String campaing) {
+                usersService.uploadFile(file,reportingLocation,username,leadId,campaing);
                 Map<String,String> response = new HashMap<String,String>();
                 response.put("status","true");
                 return response;
     }
+	
 	
 	@CrossOrigin
 	@PostMapping("/fetchactivecampaingwithusers")
@@ -219,6 +220,12 @@ public class EngineController {
 		return campaingService.fetchCampaingByUserName(username);
 	}
 	
+    @CrossOrigin
+	@GetMapping("/fetchOnlineUsersByCampaingName/{campaingName}")
+	public List<Users> fetchOnlineUsersByCampaingName(@PathVariable("campaingName") String campaingName) {
+		return usersService.fetchOnlineUsersByCampaingName(campaingName);
+	}
+    
 	@CrossOrigin
 	@GetMapping("/deleteUser/{id}")
 	public Map<String, String> deleteUser(@PathVariable("id") int id) {
@@ -256,6 +263,22 @@ public class EngineController {
 	@GetMapping("/fetchCrm/{leadid}")
 	public JsonNode fetchCrm(@PathVariable("leadid") String leadid) {
 		return campaingService.fetchCrm(leadid);
+	}
+	
+	@CrossOrigin
+	@GetMapping("/convert")
+	public void convert() {
+		campaingService.convert();
+	}
+	
+	@CrossOrigin
+	@PostMapping(path = "/updateCrm/{leadid}", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> updateCrm(@PathVariable("leadid") int leadid,@RequestBody(required = true) Map<String,List<Map<String, String>>> request) {
+	Map<String,String> response= new HashMap<>();
+		campaingService.updateCrm(leadid,request);
+		response.put("status", "true");
+		return response;
 	}
 	
 	@CrossOrigin
@@ -373,7 +396,15 @@ public class EngineController {
 	@ResponseBody
 	public List<Attendance> fetchcountattendancereportdatabetween(
 			@RequestBody(required = true) Map<String, Object> request) {
-		return leadsService.fetchcountattendancereportdatabetween(request);
+		return leadsService.fetchcountattendancereportdatabetween(request, reportingLocation);
+	}
+    
+    @CrossOrigin
+	@PostMapping(path = "/fetchcountrecordingreportdatabetween", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public List<Map<String,String>> fetchcountrecordingreportdatabetween(
+			@RequestBody(required = true) Map<String, Object> request) {
+		return leadsService.fetchcountrecordingreportdatabetween(request,reportingLocation);
 	}
 	
 	
@@ -387,7 +418,7 @@ public class EngineController {
 	@CrossOrigin
 	@PostMapping(path = "/fetchreportdatabetweenwithusername", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String,List<Leads>> fetchreportdatabetweenWithUserName(@RequestBody(required = true) Map<String, Object> request) {
+	public Map<String,List<CallLogs>> fetchreportdatabetweenWithUserName(@RequestBody(required = true) Map<String, Object> request) {
 		return leadsService.fetchreportdatabetweenWithUserName(request);
 	}
 
@@ -687,9 +718,10 @@ public class EngineController {
 	@PostMapping(path = "/feedbackLeads", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, Boolean> feedbackLeads(@RequestBody(required = true) Map<String, String> request) {
-
+		System.out.println("#######FEEDBACKLEADSs");	
+		System.out.println(request);
 		leadsService.feedbackLead(Integer.parseInt(request.get("leadId")), request.get("status"),
-				request.get("callTime"), request.get("comment"),request.get("callBackDateTime"));
+				request.get("callTime"), request.get("comment"),request.get("callBackDateTime"),request.get("callStartedTime"),request.get("callEndTime"),request.get("username"));
 
 		Map<String, Boolean> response = new HashMap<>();
 		response.put("status", true);
@@ -699,7 +731,7 @@ public class EngineController {
 	@PostMapping(path = "/feedbackLeadsMutiple", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> feedbackLeadsMutiple(@RequestBody(required = true) List<Map<String, String>> request) {
-
+		System.out.println(request);
 		leadsService.feedbackLeadsMutiple(request);
 
 		Map<String, String> response = new HashMap<>();
@@ -718,15 +750,15 @@ public class EngineController {
 		return response;
 	}
 
-	@GetMapping(path = "/feedbackLead/{leadid}/{status}/{calltime}/{comments}/{callBackDateTime}")
-	@ResponseBody
-	public Map<String, Boolean> feedbackLead(@PathVariable("leadid") int id, @PathVariable("status") String status,
-			@PathVariable("calltime") String calltime, @PathVariable("comments") String comments, @PathVariable("callBackDateTime") String callBackDateTime) {
-		leadsService.feedbackLead(id, status, calltime, comments,callBackDateTime);
-		Map<String, Boolean> response = new HashMap<>();
-		response.put("status", true);
-		return response;
-	}
+//	@GetMapping(path = "/feedbackLead/{leadid}/{status}/{calltime}/{comments}/{callBackDateTime}")
+//	@ResponseBody
+//	public Map<String, Boolean> feedbackLead(@PathVariable("leadid") int id, @PathVariable("status") String status,
+//			@PathVariable("calltime") String calltime, @PathVariable("comments") String comments, @PathVariable("callBackDateTime") String callBackDateTime) {
+//		leadsService.feedbackLead(id, status, calltime, comments,callBackDateTime);
+//		Map<String, Boolean> response = new HashMap<>();
+//		response.put("status", true);
+//		return response;
+//	}
 
 	@GetMapping(path = "/fetchLeadByPhoneNumber/{phoneNumber}")
 	@ResponseBody
@@ -762,7 +794,7 @@ public class EngineController {
 
 	@GetMapping(path = "/fetchLeadsByUserAndCampaing/{username}/{campaing}")
 	@ResponseBody
-	public List<Leads> fetchLeadsByUserAndCampaing(@PathVariable("username") String username,
+	public List<Map<String, Object>> fetchLeadsByUserAndCampaing(@PathVariable("username") String username,
 			@PathVariable("campaing") String campaing) {
 		Map<String, String> request = new HashMap<>();
 		request.put("username", username);

@@ -45,8 +45,8 @@ public class AttendanceService {
 	@Autowired
 	AttendanceRepository attendanceRepository;
 
-	public List<Attendance> fetchAttendanceByCampaingName(String CampaingName){
-		List<String> userNames= userRepository.fetchUserNameByCampaingName(CampaingName);
-		return attendanceRepository.findAttendanceByUserName(userNames);
-	}
+//	public List<Attendance> fetchAttendanceByCampaingName(String CampaingName){
+//		List<String> userNames= userRepository.fetchUserNameByCampaingName(CampaingName);
+//		return attendanceRepository.findAttendanceByUserName(userNames);
+//	}
 }

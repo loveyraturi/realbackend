@@ -31,13 +31,11 @@ public class Leads {
 	String email;
 	String crm;
 	String status;
-	String callBackDateTime;
-	String comments;
-	String lastLocalCallTime;
 	int callCount;
 	String filename;
 	Date dateCreated;
 	Date DateModified;
+
 //	@ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn (name="id",referencedColumnName = "id", insertable = false, updatable = false)
 //	private Campaing campaing;
@@ -50,6 +48,7 @@ public class Leads {
 //		this.campaing = campaing;
 //	}
 
+	
 	public int getId() {
 		return id;
 	}
@@ -63,17 +62,6 @@ public class Leads {
 	public void setCrm(String crm) {
 		this.crm = crm;
 	}
-
-
-	public String getCallBackDateTime() {
-		return callBackDateTime;
-	}
-
-
-	public void setCallBackDateTime(String callBackDateTime) {
-		this.callBackDateTime = callBackDateTime;
-	}
-
 
 	public String getAssignedTo() {
 		return assignedTo;
@@ -153,22 +141,6 @@ public class Leads {
 
 	public void setEmail(String email) {
 		this.email = email;
-	}
-
-	public String getComments() {
-		return comments;
-	}
-
-	public void setComments(String comments) {
-		this.comments = comments;
-	}
-
-	public String getLastLocalCallTime() {
-		return lastLocalCallTime;
-	}
-
-	public void setLastLocalCallTime(String lastLocalCallTime) {
-		this.lastLocalCallTime = lastLocalCallTime;
 	}
 
 	public int getCallCount() {

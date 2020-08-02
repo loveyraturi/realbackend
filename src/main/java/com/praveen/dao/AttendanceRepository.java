@@ -16,6 +16,8 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Integer>
 	 List<Attendance> findAttendanceByUserName(@Param("username") List<String> username,@Param("dateFromTimestamp") Timestamp dateFromTimestamp,@Param("dateTOTimestamp") Timestamp dateTOTimestamp);
 	@Query(value="select * from attendance  where username=:username and logged_in_time > :loggedInTime ORDER  BY logged_in_time  DESC ", nativeQuery = true)
 	 List<Attendance> findAttendanceByUserNameAndDate(@Param("username") String username,@Param("loggedInTime") Timestamp loggedInTime);
+//	@Query(value="select username,MAX(logged_in_time),MAX() from attendance  where username=:username and logged_in_time > :loggedInTime ORDER  BY logged_in_time  DESC ", nativeQuery = true)
+//	 List<Attendance> findUserAttendanceByUserNameAndDate(@Param("username") String username,@Param("loggedInTime") Timestamp loggedInTime);
 	
 //	@Modifying
 //	@Query("update attendance set logged_out_time=:loggedOutTime,total_work_hour=:totalWorkHour where id=:id")

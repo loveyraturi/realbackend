@@ -38,6 +38,9 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 	@Query(value="SELECT users.* FROM campaing LEFT JOIN group_campaing_mapping ON group_campaing_mapping.campaingname=campaing.name LEFT JOIN users ON group_campaing_mapping.groupname=users.usergroup where campaing.name=:campaingName ", nativeQuery = true)
 	List<Users> fetchActiveCampaingWithUsers(@Param("campaingName") String campaingName);
 	
+	@Query(value="SELECT users.* FROM campaing LEFT JOIN group_campaing_mapping ON group_campaing_mapping.campaingname=campaing.name LEFT JOIN users ON group_campaing_mapping.groupname=users.usergroup where campaing.name=:campaingName and users.online=1", nativeQuery = true)
+	List<Users> fetchOnlineUsersByCampaingName(@Param("campaingName") String campaingName);
+	
 	@Query(value="SELECT users.username FROM campaing LEFT JOIN group_campaing_mapping ON group_campaing_mapping.campaingname=campaing.name LEFT JOIN users ON group_campaing_mapping.groupname=users.usergroup where campaing.name=:campaingName ", nativeQuery = true)
 	List<String> fetchUserNameByCampaingName(@Param("campaingName") String campaingName);
 	
