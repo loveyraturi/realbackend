@@ -1,7 +1,19 @@
 package com.praveen.service;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.tomcat.util.http.fileupload.ByteArrayOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,37 +22,26 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.fabric.xmlrpc.base.Array;
-import com.praveen.dao.AttendanceRepository;
-import com.praveen.dao.BreakTypesRepository;
-import com.praveen.dao.CampaingLeadMappingRepository;
-import com.praveen.dao.CampaingRepository;
-import com.praveen.dao.GroupCampaingMappingRepository;
-import com.praveen.dao.LeadVersionsRepository;
-import com.praveen.dao.LeadsRepository;
-import com.praveen.dao.RecordingRepository;
-import com.praveen.dao.UserGroupMappingRepository;
-import com.praveen.dao.UserGroupRepository;
+import com.praveen.dao.InterestedRepository;
+import com.praveen.dao.PropertiesDetailsRepository;
 import com.praveen.dao.UsersRepository;
-import com.praveen.model.Attendance;
-import com.praveen.model.Campaing;
-import com.praveen.model.CampaingLeadMapping;
-import com.praveen.model.GroupCampaingMapping;
-import com.praveen.model.LeadVersions;
-import com.praveen.model.Leads;
-import com.praveen.model.Recordings;
-import com.praveen.model.UserGroup;
-import com.praveen.model.UserGroupMapping;
+import com.praveen.model.Interested;
 import com.praveen.model.Users;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.util.Date;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -59,108 +60,9 @@ public class UsersService {
 	@Autowired
 	private UsersRepository userRepository;
 	@Autowired
-	UserGroupRepository userGroupRepository;
+	PropertiesDetailsRepository propertiesDetailsRepository;
 	@Autowired
-	UserGroupMappingRepository userGroupMappingRepository;
-	@Autowired
-	GroupCampaingMappingRepository groupCampaingMappingRepository;
-	@Autowired
-	LeadsRepository leadsRepository;
-	@Autowired
-	CampaingRepository campaingRepository;
-	@Autowired
-	CampaingLeadMappingRepository campaingLeadMappingRepository;
-	@Autowired
-	LeadVersionsRepository leadVersionsRepository;
-	@Autowired
-	RecordingRepository recordingRepository;
-	@Autowired
-	BreakTypesRepository breakTypesRepository;
-	@Autowired
-	AttendanceRepository attendanceRepository;
-
-	// public Map<String, String> saveVersion(Map<String, String> request) {
-	// Versions version = new Versions();
-	// version.setFilename(request.get("filename"));
-	// version.setVersion(request.get("version"));
-	// version.setEnabled("1");
-	// System.out.println(version.getFilename() + "###################");
-	// Versions resp = repository.save(version);
-	// Map<String, String> response = new HashMap<String, String>();
-	// response.put("id", String.valueOf(resp.getId()));
-	// response.put("status", "success");
-	// return response;
-	// }
-
-	public Map<String, String> deleteUser(int id) {
-		Map<String, String> response = new HashMap<>();
-		response.put("status", "true");
-		userRepository.deleteById(id);
-		return response;
-	}
-
-	public Map<String, String> deleteCampaing(int id) {
-		Map<String, String> response = new HashMap<>();
-		response.put("status", "true");
-		campaingRepository.deleteById(id);
-		return response;
-	}
-
-	public Map<String, String> deleteGroup(int id) {
-		Map<String, String> response = new HashMap<>();
-		response.put("status", "true");
-		userGroupRepository.deleteById(id);
-		return response;
-	}
-
-	public Map<String, String> deleteBreakType(int id) {
-		Map<String, String> response = new HashMap<>();
-		response.put("status", "true");
-		breakTypesRepository.deleteById(id);
-		return response;
-	}
-
-	public void uploadFile(MultipartFile file, String filePath, String username,String leadId,String campaing) {
-		try {
-			System.out.println(filePath + file.getOriginalFilename());
-			byte[] bytes = file.getBytes();
-			BufferedOutputStream stream = new BufferedOutputStream(
-					new FileOutputStream(new File(filePath + file.getOriginalFilename())));
-			stream.write(bytes);
-			stream.close();
-			Recordings recordings = new Recordings();
-			recordings.setRecordingName(file.getOriginalFilename());
-			if(username!=null) {
-			recordings.setUsername(username);
-			}
-			if(leadId!=null) {
-			recordings.setLeadId(Integer.parseInt(leadId));
-			}
-			if(campaing!=null) {
-			recordings.setCampaing(campaing);
-			}
-			recordingRepository.save(recordings);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void uploadFile(MultipartFile file, String filePath, String username) {
-		try {
-			System.out.println(filePath + file.getOriginalFilename());
-			byte[] bytes = file.getBytes();
-			BufferedOutputStream stream = new BufferedOutputStream(
-					new FileOutputStream(new File(filePath + file.getOriginalFilename())));
-			stream.write(bytes);
-			stream.close();
-			Recordings recordings = new Recordings();
-			recordings.setRecordingName(file.getOriginalFilename());
-			recordings.setUsername(username);
-			recordingRepository.save(recordings);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+	InterestedRepository interestedRepository;
 
 	public Map<String, String> validateUser(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
@@ -171,35 +73,24 @@ public class UsersService {
 		} else {
 			Users user = userRepository.validateUser(request.get("username"), request.get("password"));
 			if (user.getId() > 0) {
-
-				if ("0".equals(user.getOnline()) || user.getOnline().isEmpty() || user.getOnline() == null) {
-					user.setOnline("1");
-					response.put("status", "true");
-					response.put("message", "Successfully logged in");
-					userRepository.save(user);
-
-					LocalDateTime now = LocalDateTime.now();
-					java.sql.Date currentDate = java.sql.Date.valueOf(now.toLocalDate());
-					Calendar calendar = Calendar.getInstance();
-					calendar.setTime(currentDate);
-					calendar.set(Calendar.MILLISECOND, 0);
-					calendar.set(Calendar.SECOND, 0);
-					calendar.set(Calendar.MINUTE, 0);
-					calendar.set(Calendar.HOUR_OF_DAY, 0);
-					Timestamp timestamp = new Timestamp(calendar.getTimeInMillis());
-					System.out.println(timestamp);
-					Attendance attendance = new Attendance();
-					attendance.setUsername(user.getUsername());
-					attendance.setLoggedInTime(new Timestamp((new Date()).getTime()));
-					attendance.setDeviceId(request.get("device_id"));
-					attendanceRepository.save(attendance);
-
-					// Attendance attendance = new Attendance();
-
-				} else {
-					response.put("status", "false");
-					response.put("message", "User already logged in");
-				}
+				// if (user.getOnline() == null) {
+				user.setOnline("1");
+				response.put("status", "true");
+				response.put("type", user.getType());
+				response.put("message", "Successfully logged in");
+				userRepository.save(user);
+				// } else if ("0".equals(user.getOnline()) || user.getOnline().isEmpty()) {
+				// user.setOnline("1");
+				// response.put("status", "true");
+				// response.put("type", user.getType());
+				// response.put("message", "Successfully logged in");
+				// userRepository.save(user);
+				//
+				// } else {
+				// response.put("status", "false");
+				// response.put("type", "");
+				// response.put("message", "User already logged in");
+				// }
 
 			} else {
 				response.put("status", "false");
@@ -210,338 +101,138 @@ public class UsersService {
 		return response;
 	}
 
-	public Users login(Map<String, String> request) {
-		Map<String, String> response = new HashMap<>();
+	public void registerUser(Map<String, String> request) {
+		Users users = new Users();
+		users.setDeviceId(request.get("deviceId"));
+		users.setFullName(request.get("fullName"));
+		users.setPassword(request.get("password"));
+		users.setStatus(request.get("status"));
+		users.setType(request.get("type"));
+		users.setUsername(request.get("username"));
+		users.setPhoneNumber(request.get("phoneNumber"));
+		users.setEmail(request.get("email"));
+		userRepository.save(users);
 
-		if (userRepository.validateUser(request.get("userName"), request.get("password")) == null) {
-			response.put("status", "false");
+	}
+
+	public Map<String, String> interested(Map<String, String> request) {
+		Date appliedDate = new Timestamp((new Date()).getTime());
+		String username = request.get("username");
+		System.out.println(appliedDate);
+		System.out.println(username);
+		Users user = userRepository.findByUsername(username);
+		if (user != null) {
+			Interested interested = new Interested();
+			interested.setFullName(user.getFullName());
+			interested.setUsername(user.getUsername());
+			interested.setAppliedDate(appliedDate);
+			interested.setEmail(user.getEmail());
+			interested.setPhoneNumber(user.getPhoneNumber());
+			interested.setPropertyId(request.get("property_id"));
+			interested.setStatus(request.get("status"));
+			interestedRepository.save(interested);
+		}
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "true");
+		return response;
+	}
+
+	public ByteArrayResource fetchreportdatabetween(Map<String, Object> request, String reportingLocation) {
+		String phoneNumber = (String) request.get("phone_number");
+		String dateTo = String.valueOf(request.get("dateto"));
+		String dateFrom = String.valueOf(request.get("datefrom"));
+		Timestamp dateToTimestamp = null;
+		Timestamp dateFromTimestamp = null;
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			Date dateToDate = dateFormat.parse(dateTo);
+			Date dateFromDate = dateFormat.parse(dateFrom);
+			dateToTimestamp = new java.sql.Timestamp(dateToDate.getTime());
+			dateFromTimestamp = new java.sql.Timestamp(dateFromDate.getTime());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println(dateToTimestamp);
+		System.out.println(dateFromTimestamp);
+		List<Interested> resultLeads = new ArrayList<>();
+		if (phoneNumber.equals("")) {
+			resultLeads.addAll(interestedRepository.fetchreportdatabetween(dateFromTimestamp, dateToTimestamp));
 		} else {
-			Users user = userRepository.validateUser(request.get("userName"), request.get("password"));
-			if (user.getId() > 0) {
-				return user;
-			} else {
-				response.put("status", "false");
-			}
+			resultLeads.addAll(interestedRepository.fetchReportDataBetweenbyPhoneNumber(phoneNumber, dateFromTimestamp,dateToTimestamp));
 		}
-
-		return new Users();
-	}
-
-	public List<Map<String, String>> fetchUsersByCampaing(String campaingName) {
-		List<Map<String, String>> users = new ArrayList<>();
-		groupCampaingMappingRepository.findDistinctGroupByCampaingName(campaingName).forEach((item) -> {
-			userRepository.findUserByGroupName(item).forEach((element) -> {
-				Map<String, String> userMap = new HashMap<>();
-				userMap.put("id", String.valueOf(element.getId()));
-				userMap.put("name", element.getUsername());
-				users.add(userMap);
-			});
-		});
-		return users;
-	}
-	public List<Users> fetchOnlineUsersByCampaingName(String campaingName) {
-		return userRepository.fetchOnlineUsersByCampaingName(campaingName);
-	}
-	public List<Map<String, Object>> fetchLeadsByUserAndCampaing(Map<String, String> request) {
-		List<Leads> response = new ArrayList<>();
-		userGroupMappingRepository.findGroupByUsername(request.get("username")).forEach((groupMapping) -> {
-			List<Campaing> campaings = campaingRepository.findCampaingByGroupName(groupMapping.getGroupname(),
-					request.get("campaing"));
-			// int count=0;
-			campaings.forEach((campaing) -> {
-//				campaing.getAssignmentType()
-				List<String> filenames = leadsRepository.findLeadsVersionsByCampaingName(campaing.getName());
-				List<Leads> leads = leadsRepository.findLeadsByFilename(filenames);
-				response.addAll(leads);
-			});
-		});
-		for (int i = 0; i < response.size(); i++) {
-			if (i == 0) {
-				System.out.println(response);
-				Leads currentLead = response.get(i);
-				System.out.println("############################");
-				System.out.println(response.get(i).getId());
-				System.out.println(request.get("username"));
-				currentLead.setStatus("OCCUPIED");
-				currentLead.setName(request.get("username"));
-				leadsRepository.save(currentLead);
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			XSSFWorkbook workbook = new XSSFWorkbook();
+			XSSFSheet sheet = workbook.createSheet("InterestedReport");
+			int rownum = 0;
+			int cellnumHeader = 0;
+			Row rowHeader = sheet.createRow(rownum++);
+			Cell header1 = rowHeader.createCell(cellnumHeader++);
+			header1.setCellValue("fullName");
+			Cell header2 = rowHeader.createCell(cellnumHeader++);
+			header2.setCellValue("username");
+			Cell header3 = rowHeader.createCell(cellnumHeader++);
+			header3.setCellValue("propertyId");
+			Cell header4 = rowHeader.createCell(cellnumHeader++);
+			header4.setCellValue("phoneNumber");
+			Cell header5 = rowHeader.createCell(cellnumHeader++);
+			header5.setCellValue("Email");
+			Cell header6 = rowHeader.createCell(cellnumHeader++);
+			header6.setCellValue("Status");
+			Cell header7 = rowHeader.createCell(cellnumHeader++);
+			header7.setCellValue("appliedDate");
+			Font hlink_font = workbook.createFont();
+			hlink_font.setUnderline(Font.U_SINGLE);
+			hlink_font.setColor(IndexedColors.BLUE.getIndex());
+			CellStyle hlink_style = workbook.createCellStyle();
+			CreationHelper createHelper = workbook.getCreationHelper();
+			for (Interested lead : resultLeads) {
+				System.out.println(lead.getFullName());
+				// this creates a new row in the sheet
+				Row row = sheet.createRow(rownum++);
+				int cellnum = 0;
+				Cell cell1 = row.createCell(cellnum++);
+				cell1.setCellValue(lead.getFullName());
+				Cell cell2 = row.createCell(cellnum++);
+				cell2.setCellValue(lead.getUsername());
+				Cell cell3 = row.createCell(cellnum++);
+				cell3.setCellValue(lead.getPropertyId());
+				Cell cell4 = row.createCell(cellnum++);
+				cell4.setCellValue(lead.getPhoneNumber());
+				Cell cell5 = row.createCell(cellnum++);
+				cell5.setCellValue(lead.getEmail());
+				Cell cell6 = row.createCell(cellnum++);
+				cell6.setCellValue(lead.getStatus());
+				DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss");
+				String strDate = dateFormat.format(lead.getAppliedDate());
+				System.out.println("Converted Date: " + strDate);
+				Cell cell7 = row.createCell(cellnum++);
+				cell7.setCellValue(strDate);
 			}
-		}
-		List<Map<String,Object>> respList=new ArrayList<>();
-		
-		response.forEach((items)->{
-			JsonNode responseCrm = null;
-			ObjectMapper mapper = new ObjectMapper();
-			String fields=items.getCrm();
-			if(!fields.isEmpty()) {
-				System.out.println("inside");
-			 try {
-				 responseCrm = mapper.readTree(fields);
-			} catch (JsonMappingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JsonProcessingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			}else {
-				try {
-					responseCrm = mapper.readTree("{}");
-				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (JsonProcessingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+			File excelFile = new File(reportingLocation + "InterestedReport.xlsx");
+			OutputStream fos = new FileOutputStream(excelFile);
+			workbook.write(fos);
+			fos.close();
+			System.out.println("InterestedReport.xlsx written successfully on disk.");
+			FileInputStream fis = new FileInputStream(excelFile);
+			byte[] buf = new byte[1024];
+			try {
+				for (int readNum; (readNum = fis.read(buf)) != -1;) {
+					stream.write(buf, 0, readNum); // no doubt here is 0
+					System.out.println("read " + readNum + " bytes,");
 				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
-			Map<String,Object> resp=new HashMap<>();
-			resp.put("id",items.getId());
-			resp.put("name",items.getName());
-			resp.put("assignedTo",items.getAssignedTo());
-			resp.put("phoneNumber",items.getPhoneNumber());
-			resp.put("firstName",items.getFirstName());
-	        resp.put("city",items.getCity());
-	        resp.put("state",items.getState());
-	        resp.put("email",items.getEmail());
-	        resp.put("crm",responseCrm);
-	        resp.put("status",items.getStatus());
-	        resp.put("callCount",items.getCallCount());
-	        resp.put("filename",items.getFilename());
-	        resp.put("dateCreated",items.getDateCreated());
-	        resp.put("dateModified",items.getDateModified());
-	        respList.add(resp);
-		});
-		return respList;
-	}
+			byte[] bytes = stream.toByteArray();
 
-	public void createLead(Leads leads) {
-		leadsRepository.save(leads);
-	}
-
-	public List<Recordings> fetchRecordingsByUsername(String username) {
-		return recordingRepository.fetchRecordingsByUsername(username);
-	}
-
-	public List<Recordings> fetchRecordings() {
-		return recordingRepository.findAll();
-	}
-
-	// public void loadLeadsWithUser(Users user,Leads leads,UserGroupMapping
-	// userGroupMapping) {
-	// leadsRepository.save(leads);
-	// userRepository.save(user);
-	// userGroupMappingRepository.save(userGroupMapping);
-	//
-	// List<Leads> leadFound=
-	// leadsRepository.findLeadByNumber(leads.getPhoneNumber());
-	// if(leadFound.size()>0) {
-	// CampaingLeadMapping clm = new CampaingLeadMapping();
-	// clm.setCampaingid(1);
-	// clm.setLeadid(leadFound.get(0).getId());
-	// campaingLeadMappingRepository.save(clm);
-	// }
-	//
-	// }
-	public List<Leads> fetchLeadByUserAndCampaing(Map<String, String> request) {
-		List<Leads> response = new ArrayList<>();
-		userGroupMappingRepository.findGroupByUsername(request.get("username")).forEach((groupMapping) -> {
-			List<Campaing> campaings = campaingRepository.findCampaingByGroupName(groupMapping.getGroupname(),
-					request.get("campaing"));
-			// int count=0;
-			campaings.forEach((campaing) -> {
-				List<String> filenames = leadsRepository.findLeadsVersionsByCampaingName(campaing.getName());
-				System.out.println(filenames);
-				if (filenames.size() > 0) {
-					if (campaing.getAssignmentType().equals("byUser")) {
-						List<Leads> leads = leadsRepository.findLeadsByFilenameAndUserName(filenames,
-								request.get("username"));
-						response.addAll(leads);
-					} else {
-						List<Leads> leads = leadsRepository.findLeadsByFilename(filenames);
-						response.addAll(leads);
-					}
-				}
-			});
-		});
-		for (int i = 0; i < response.size(); i++) {
-			if (i == 0) {
-				System.out.println(response);
-				Leads currentLead = response.get(i);
-				System.out.println("############################");
-				System.out.println(response.get(i).getId());
-				System.out.println(request.get("username"));
-				currentLead.setStatus("OCCUPIED");
-				currentLead.setName(request.get("username"));
-				leadsRepository.save(currentLead);
-			}
+			HttpHeaders header = new HttpHeaders();
+			header.setContentType(new MediaType("application", "force-download"));
+			header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ProductTemplate.xlsx");
+			return new ByteArrayResource(bytes);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return response;
+		return null;
 	}
-
-	public Map<String, String> logout(String username) {
-		Map<String, String> response = new HashMap<>();
-		Users user = userRepository.findByUsername(username).get(0);
-		user.setOnline("0");
-		userRepository.save(user);
-		response.put("status", "true");
-		LocalDateTime now = LocalDateTime.now();
-		java.sql.Date currentDate = java.sql.Date.valueOf(now.toLocalDate());
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(currentDate);
-		calendar.set(Calendar.MILLISECOND, 0);
-		calendar.set(Calendar.SECOND, 0);
-		calendar.set(Calendar.MINUTE, 0);
-		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		Timestamp timestamp = new Timestamp(calendar.getTimeInMillis());
-		System.out.println(timestamp);
-		List<Attendance> attendanceList = attendanceRepository.findAttendanceByUserNameAndDate(username, timestamp);
-		if (attendanceList.size() != 0) {
-			Attendance attendance = attendanceList.get(0);
-			Timestamp currentTimeStamp = new Timestamp((new Date()).getTime());
-			attendance.setLoggedOutTime(currentTimeStamp);
-			int hours = Math.abs(currentTimeStamp.getHours() - attendance.getLoggedInTime().getHours());
-			int minute = Math.abs((currentTimeStamp.getMinutes() - attendance.getLoggedInTime().getMinutes()));
-			int seconds = Math.abs((currentTimeStamp.getSeconds() - attendance.getLoggedInTime().getSeconds()));
-			String workTime = hours + " Hours," + minute + " Minutes," + seconds + " Seconds";
-			attendance.setHours(hours);
-			attendance.setMinute(minute);
-			attendance.setSeconds(seconds);
-			attendance.setTotalWorkHour(workTime);
-			System.out.println(workTime);
-
-			attendanceRepository.save(attendance);
-			//
-			// attendanceRepository.userLoggedOut();
-		}
-
-		return response;
-	}
-
-	public Map<String, String> createUser(Map<String, String> request) {
-		Map<String, String> response = new HashMap<>();
-		Users user = new Users();
-		user.setFullName(request.get("fullname"));
-		user.setLevel(Integer.parseInt(request.get("level")));
-		user.setPassword(request.get("password"));
-		user.setOnline("0");
-		user.setUsername(request.get("username"));
-		user.setUsergroup(request.get("usergroup"));
-		user.setStatus(request.get("status"));
-		userRepository.save(user);
-		response.put("status", "true");
-		return response;
-	}
-
-	public Map<String, String> updateUser(Map<String, String> request) {
-		Map<String, String> response = new HashMap<>();
-
-		Users user = userRepository.findById(Integer.parseInt(request.get("id"))).get();
-		user.setFullName(request.get("fullname"));
-		user.setLevel(Integer.parseInt(request.get("level")));
-		user.setPassword(request.get("password"));
-		user.setUsername(request.get("username"));
-		user.setUsergroup(request.get("usergroup"));
-		user.setStatus(request.get("status"));
-		userRepository.save(user);
-		response.put("status", "true");
-		return response;
-	}
-
-	public Map<String, String> attachUserWithGroup(Map<String, String> request) {
-		Map<String, String> response = new HashMap<>();
-		Optional<Users> user = userRepository.findById(Integer.parseInt(request.get("user_id")));
-		if (user.isPresent()) {
-			Users userFound = user.get();
-			Optional<UserGroup> group = userGroupRepository.findById(Integer.parseInt(request.get("group_id")));
-			if (group.isPresent()) {
-				UserGroup userGroup = group.get();
-				UserGroupMapping userGroupMapping = new UserGroupMapping();
-				userGroupMapping.setUsername(userFound.getFullName());
-				userGroupMapping.setGroupname(userGroup.getName());
-				userGroupMappingRepository.save(userGroupMapping);
-			}
-		}
-
-		response.put("status", "true");
-		return response;
-	}
-
-	public Map<String, String> assignUserToGroup(Map<String, String> request) {
-		Map<String, String> response = new HashMap<>();
-		UserGroupMapping userGroupMapping = new UserGroupMapping();
-		userGroupMapping.setUsername(request.get("username"));
-		userGroupMapping.setGroupname(request.get("groupname"));
-		userGroupMappingRepository.save(userGroupMapping);
-		response.put("status", "true");
-		return response;
-	}
-
-	public Map<String, String> updateAssignUserToGroup(Map<String, String> request) {
-		Map<String, String> response = new HashMap<>();
-		UserGroupMapping userGroupMapping = userGroupMappingRepository.findGroupByUsername(request.get("username"))
-				.get(0);
-		userGroupMapping.setUsername(request.get("username"));
-		userGroupMapping.setGroupname(request.get("groupname"));
-		userGroupMappingRepository.save(userGroupMapping);
-		response.put("status", "true");
-		return response;
-	}
-
-	public void createUser(Users user) {
-		userRepository.save(user);
-	}
-
-	public void loadCSV(Users users, Campaing campaing, UserGroup usergroup, UserGroupMapping ugm,
-			GroupCampaingMapping gcm) {
-		userRepository.save(users);
-		campaingRepository.save(campaing);
-		userGroupRepository.save(usergroup);
-		userGroupMappingRepository.save(ugm);
-		groupCampaingMappingRepository.save(gcm);
-	}
-
-	public void loadUserNameCsv(Users users, UserGroupMapping ugm) {
-		userRepository.save(users);
-		userGroupMappingRepository.save(ugm);
-	}
-	// public void loadCSVLead(Leads leads,String campaing,String fileName){
-	//
-	//
-	//
-	//
-	//
-	// }
-	//
-	// public void deleteByVersionAndFilename(String version, String filename) {
-	// repository.deleteByVersionAndFilename(filename, version);
-	// }
-	//
-	// public ArrayList<Versions> fetchAllVersions() {
-	// return (ArrayList<Versions>) repository.findAll();
-	// }
-	//
-	// public ArrayList<Versions> fetchByName(String name) {
-	//
-	// return (ArrayList<Versions>) repository.findAllByName(name);
-	// }
-	//
-	// public List<Versions> fetchByFilenameAndVersions(String filename, String
-	// version) {
-	// return repository.findByFilenameAndVersion(filename, version);
-	// }
-	//
-	// public static boolean deleteDirectory(File dir) {
-	// if (dir.isDirectory()) {
-	// File[] children = dir.listFiles();
-	// for (int i = 0; i < children.length; i++) {
-	// boolean success = deleteDirectory(children[i]);
-	// if (!success) {
-	// return false;
-	// }
-	// }
-	// }
-	// System.out.println("removing file or directory : " + dir.getName());
-	// return dir.delete();
-	// }
 }

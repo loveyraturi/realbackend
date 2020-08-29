@@ -26,19 +26,31 @@ public class Users {
 	private int id;
 	private String username;
 	private String password;
-	private int level;
 	private String fullName;
-	private String usergroup;
+	private String type;
 	private String status;
 	private String online;
 	private String deviceId;
+	private String phoneNumber;
+	private String email;
 	Date dateCreated;
 	Date DateModified;
 
-	// @ManyToOne(fetch = FetchType.LAZY)
-	// @JoinColumn (name="id",referencedColumnName = "id", insertable = false,
-	// updatable = false)
-	// private UserGroup userGroup;
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
 	public String getStatus() {
 		return status;
@@ -118,20 +130,12 @@ public class Users {
 		this.id = id;
 	}
 
-	public int getLevel() {
-		return level;
+	public String getType() {
+		return type;
 	}
 
-	public void setLevel(int level) {
-		this.level = level;
-	}
-
-	public String getUsergroup() {
-		return usergroup;
-	}
-
-	public void setUsergroup(String usergroup) {
-		this.usergroup = usergroup;
+	public void setType(String type) {
+		this.type = type;
 	}
 
 	@PrePersist
