@@ -63,7 +63,15 @@ public class UsersService {
 	PropertiesDetailsRepository propertiesDetailsRepository;
 	@Autowired
 	InterestedRepository interestedRepository;
-
+	public Map<String, String> validateUserName(Map<String, String> request) {
+		Map<String, String> response = new HashMap<>();
+		if(userRepository.findByUsername(request.get("username")) != null) {
+			response.put("status", "true");
+		}else {
+			response.put("status", "false");
+		}
+		return response;
+	}
 	public Map<String, String> validateUser(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
 
@@ -119,9 +127,13 @@ public class UsersService {
 		Date appliedDate = new Timestamp((new Date()).getTime());
 		String username = request.get("username");
 		System.out.println(appliedDate);
-		System.out.println(username);
+		System.out.println(request.get("property_id"));
+		Interested alreadyAvailable = interestedRepository.findByUsernameAndPropety(username,request.get("property_id"));
+		System.out.println(alreadyAvailable.getId());
 		Users user = userRepository.findByUsername(username);
-		if (user != null) {
+		Map<String, String> response = new HashMap<>();
+//		Interested interestedResponse=null;
+		if (alreadyAvailable == null) {
 			Interested interested = new Interested();
 			interested.setFullName(user.getFullName());
 			interested.setUsername(user.getUsername());
@@ -131,9 +143,14 @@ public class UsersService {
 			interested.setPropertyId(request.get("property_id"));
 			interested.setStatus(request.get("status"));
 			interestedRepository.save(interested);
+			response.put("status", "true");
+			response.put("message", "Thanks for showing your Interest");
+		}else {
+			response.put("status", "true");
+			response.put("message", "Your application is already registerd with us your application id is "+alreadyAvailable.getId());
 		}
-		Map<String, String> response = new HashMap<>();
-		response.put("status", "true");
+		
+		
 		return response;
 	}
 

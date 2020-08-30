@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.praveen.model.Interested;
 import com.praveen.model.Users;
 
 import java.util.List;
@@ -18,10 +19,10 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 	
 	@Query(value="SELECT * FROM users where username=:username and password=:password", nativeQuery = true)
 	Users validateUser(@Param("username") String username,@Param("password") String password);	
+	
 	@Query(value="SELECT * FROM users where username=:username", nativeQuery = true)
-	Users findByUsername(@Param("username") String username);	
-	
-	
+	Users findByUsername(@Param("username") String username);
+
 //	@Query(value="SELECT * FROM users where username=:username", nativeQuery = true)
 //	List<Users> findByUsername(@Param("username") String username);	
 //	

@@ -124,6 +124,12 @@ public class EngineController {
 		return usersService.validateUser(resp);
 	}
 	@CrossOrigin
+	@PostMapping(path = "/validateUserName", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> validateUserName(@RequestBody(required = true) Map<String, String> resp) {
+		return usersService.validateUserName(resp);
+	}
+	@CrossOrigin
 	@PostMapping(path = "/addProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> addProperties(@RequestBody(required = true) Map<String, Object> resp) {

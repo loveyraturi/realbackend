@@ -17,6 +17,9 @@ public interface InterestedRepository extends JpaRepository<Interested, Integer>
 	 List<Interested> fetchreportdatabetween( @Param("fromDate") Timestamp fromDate,@Param("toDate") Timestamp toDate);
 	 @Query(value="select * from interested where  applied_date >= :fromDate and applied_date <= :toDate and phone_number=:phone_number ", nativeQuery = true)
 	 List<Interested> fetchReportDataBetweenbyPhoneNumber(@Param("phone_number") String phone_number, @Param("fromDate") Timestamp fromDate,@Param("toDate") Timestamp toDate);
-	 
+	 @Query(value="SELECT * FROM interested where username=:username and property_id=:propertyId", nativeQuery = true)
+	 Interested findByUsernameAndPropety(@Param("username") String username,@Param("propertyId") String propertyId);
+		
+		
 	 
 }
