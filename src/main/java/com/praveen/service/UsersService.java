@@ -129,7 +129,7 @@ public class UsersService {
 		System.out.println(appliedDate);
 		System.out.println(request.get("property_id"));
 		Interested alreadyAvailable = interestedRepository.findByUsernameAndPropety(username,request.get("property_id"));
-		System.out.println(alreadyAvailable.getId());
+//		System.out.println(alreadyAvailable.getId());
 		Users user = userRepository.findByUsername(username);
 		Map<String, String> response = new HashMap<>();
 //		Interested interestedResponse=null;

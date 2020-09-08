@@ -15,10 +15,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -43,7 +48,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.praveen.dao.ImagesRepository;
+import com.praveen.dao.InterestedRepository;
 import com.praveen.dao.PropertiesDetailsRepository;
+import com.praveen.dao.UsersRepository;
 import com.praveen.model.Images;
 import com.praveen.model.Interested;
 import com.praveen.model.PropertiesDetails;
@@ -55,15 +62,108 @@ public class PropertiesDetailsService {
 	PropertiesDetailsRepository propertiesDetailsRepository;
 	@Autowired
 	ImagesRepository imagesRepository;
+	@Autowired
+	InterestedRepository interestedRepository;
+	@Autowired
+	UsersRepository usersRepository;
+	@PersistenceContext
+	public EntityManager em;
+	
+	public List<Map<String, Object>> manageProperties(Map<String, String> respo) {
+		String UserName = respo.get("username");
+		List<Map<String, Object>> response = new ArrayList<>();
+		propertiesDetailsRepository.findByOwnerName(UserName).forEach((item) -> {
+			List<Images> images = imagesRepository.getImageByPropertyId((Integer) item.getId());
+			System.out.println(item);
+			Map<String, Object> prop = new HashMap<>();
+			prop.put("id", item.getId());
+			prop.put("name", item.getName());
+			prop.put("address", item.getAddress());
+			prop.put("bedroom", item.getBedroom());
+			prop.put("washroom", item.getWashroom());
+			prop.put("garage", item.getGarage());
+			prop.put("description", item.getDescription());
+			prop.put("area", item.getArea());
+			prop.put("ownerName", item.getOwnerName());
+			prop.put("isavailable", item.getIsavailable());
+			prop.put("phoneNumber", item.getPhoneNumber().replaceAll(".(?=.{4})", "*"));
+			prop.put("frontImage", item.getFrontImage());
+			prop.put("latitude", item.getLatitude());
+			prop.put("longitude", item.getLongitude());
+			prop.put("property_type", item.getPropertyType());
+			prop.put("allowed", item.getAllowed());
+			prop.put("furnish", item.getFurnish());
+			prop.put("dateCreated", item.getDateCreated());
+			prop.put("DateModified", item.getDateModified());
+			prop.put("price", item.getPrice());
+			prop.put("maintainance", item.getMaintainance());
+			prop.put("security", item.getSecurity());
+			prop.put("frontImage", images.get(0).getImageName());
+			response.add(prop);
+		});
+		return response;
+	}
+
+	public void updatePropertyStatus(int propertyId, int status) {
+		PropertiesDetails pd = propertiesDetailsRepository.findById(propertyId).get();
+		if (pd != null) {
+			pd.setIsavailable(status);
+			propertiesDetailsRepository.save(pd);
+		}
+
+	}
+
+	public void deleteInterestedProperties(Integer propertyId, String username) {
+		interestedRepository.deleteInterestedProperties(propertyId, username);
+	}
+
+	public List<Map<String, Object>> sortlistedProperties(String username) {
+		System.out.println(username);
+		List<Map<String, Object>> response = new ArrayList<>();
+
+		propertiesDetailsRepository.fetchInterestedPropertyByUsername(username).forEach((item) -> {
+			List<Images> images = imagesRepository.getImageByPropertyId((Integer) item.getId());
+			System.out.println(item);
+			Map<String, Object> prop = new HashMap<>();
+			prop.put("id", item.getId());
+			prop.put("name", item.getName());
+			prop.put("address", item.getAddress());
+			prop.put("bedroom", item.getBedroom());
+			prop.put("washroom", item.getWashroom());
+			prop.put("garage", item.getGarage());
+			prop.put("description", item.getDescription());
+			prop.put("area", item.getArea());
+			prop.put("ownerName", item.getOwnerName());
+			prop.put("isavailable", item.getIsavailable());
+			prop.put("phoneNumber", item.getPhoneNumber().replaceAll(".(?=.{4})", "*"));
+			prop.put("frontImage", item.getFrontImage());
+			prop.put("latitude", item.getLatitude());
+			prop.put("longitude", item.getLongitude());
+			prop.put("property_type", item.getPropertyType());
+			prop.put("allowed", item.getAllowed());
+			prop.put("furnish", item.getFurnish());
+			prop.put("dateCreated", item.getDateCreated());
+			prop.put("DateModified", item.getDateModified());
+			prop.put("price", item.getPrice());
+			prop.put("maintainance", item.getMaintainance());
+			prop.put("security", item.getSecurity());
+			prop.put("frontImage", images.get(0).getImageName());
+			response.add(prop);
+		});
+		return response;
+	}
+
 	public List<String> searchAddress(String address) {
 		List<String> searchDetails = new ArrayList<>();
-		 propertiesDetailsRepository.searchAddress(address).forEach((item)-> {
-			 searchDetails.add((String)item[1]);
-			 searchDetails.add((String)item[0]);
-		 });
-		 return searchDetails; 
+		propertiesDetailsRepository.searchAddress(address).forEach((item) -> {
+			searchDetails.add((String) item[1]);
+			searchDetails.add((String) item[0]);
+		});
+		return searchDetails;
 	}
-	public ByteArrayResource fetchreportdatabetweenpropertyadded(Map<String, Object> request, String reportingLocation) {
+
+	public ByteArrayResource fetchreportdatabetweenpropertyadded(Map<String, Object> request,
+			String reportingLocation) {
 		String phoneNumber = (String) request.get("phone_number");
 		String dateTo = String.valueOf(request.get("dateto"));
 		String dateFrom = String.valueOf(request.get("datefrom"));
@@ -81,14 +181,15 @@ public class PropertiesDetailsService {
 		System.out.println(dateToTimestamp);
 		System.out.println(dateFromTimestamp);
 		List<PropertiesDetails> resultLeads = new ArrayList<>();
-			resultLeads.addAll(propertiesDetailsRepository.fetchreportdatabetweenpropertyadded(dateFromTimestamp, dateToTimestamp));
-		
+		resultLeads.addAll(
+				propertiesDetailsRepository.fetchreportdatabetweenpropertyadded(dateFromTimestamp, dateToTimestamp));
+
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			XSSFWorkbook workbook = new XSSFWorkbook();
 			XSSFSheet sheet = workbook.createSheet("PropertiesReport");
 			int rownum = 0;
-			int cellnumHeader = 0;			
+			int cellnumHeader = 0;
 			Row rowHeader = sheet.createRow(rownum++);
 			Cell header1 = rowHeader.createCell(cellnumHeader++);
 			header1.setCellValue("name");
@@ -132,7 +233,7 @@ public class PropertiesDetailsService {
 			header20.setCellValue("isApproved");
 			CreationHelper createHelper = workbook.getCreationHelper();
 			for (PropertiesDetails properties : resultLeads) {
-//				System.out.println(properties.getFullName());
+				// System.out.println(properties.getFullName());
 				// this creates a new row in the sheet
 				Row row = sheet.createRow(rownum++);
 				int cellnum = 0;
@@ -206,57 +307,174 @@ public class PropertiesDetailsService {
 		}
 		return null;
 	}
-	public List<Map<String,Object>> mainProperties(Map<String, String> request) {
-		List<PropertiesDetails> propertiesDetails= new ArrayList<>();
-		if(request.get("priceRange").contains("<")) {
-			propertiesDetails.addAll(propertiesDetailsRepository.mainPropertiesGreaterPrice(request.get("address"),request.get("priceRange"),request.get("propertyBhk"),request.get("type")));
-		}else if(request.get("priceRange").contains(">")) {
-			propertiesDetails.addAll(propertiesDetailsRepository.mainPropertiesLessPrice(request.get("address"),request.get("priceRange"),request.get("propertyBhk"),request.get("type")));
 
-		}else {
+	public List<Map<String, Object>> mainProperties(Map<String, String> request) {
+		List<PropertiesDetails> propertiesDetails = new ArrayList<>();
+		if (request.get("priceRange").contains("<")) {
+			propertiesDetails.addAll(propertiesDetailsRepository.mainPropertiesGreaterPrice(request.get("address"),
+					request.get("priceRange"), request.get("propertyBhk"), request.get("type")));
+		} else if (request.get("priceRange").contains(">")) {
+			propertiesDetails.addAll(propertiesDetailsRepository.mainPropertiesLessPrice(request.get("address"),
+					request.get("priceRange"), request.get("propertyBhk"), request.get("type")));
+
+		} else {
 			System.out.println("between");
-			String[] priceRange=request.get("priceRange").split(",");
-			System.out.println(request.get("address")+"####"+priceRange[0]+"####"+priceRange[1]+"####"+request.get("propertyBhk")+"####"+request.get("type"));
-			System.out.println("SELECT * FROM properties_details WHERE (((city LIKE %"+request.get("address")+"% or locality LIKE %"+request.get("address")+"%) and price between "+priceRange[0]+" and "+priceRange[1]+") and property_type="+request.get("type")+") and name="+request.get("propertyBhk"));
-			propertiesDetails.addAll(propertiesDetailsRepository.mainPropertiesRangePrice("%"+request.get("address")+"%",priceRange[0],priceRange[1],request.get("propertyBhk"),request.get("type")));
+			String[] priceRange = request.get("priceRange").split(",");
+			System.out.println(request.get("address") + "####" + priceRange[0] + "####" + priceRange[1] + "####"
+					+ request.get("propertyBhk") + "####" + request.get("type"));
+			System.out.println("SELECT * FROM properties_details WHERE (((city LIKE %" + request.get("address")
+					+ "% or locality LIKE %" + request.get("address") + "%) and price between " + priceRange[0]
+					+ " and " + priceRange[1] + ") and property_type=" + request.get("type") + ") and name="
+					+ request.get("propertyBhk"));
+			propertiesDetails
+					.addAll(propertiesDetailsRepository.mainPropertiesRangePrice("%" + request.get("address") + "%",
+							priceRange[0], priceRange[1], request.get("propertyBhk"), request.get("type")));
 
 		}
-		List<Map<String,Object>> propList= new ArrayList<>();
+		List<Map<String, Object>> propList = new ArrayList<>();
 		System.out.println(propertiesDetails.size());
-		if(propertiesDetails.size()!=0) {
-		propertiesDetails.forEach((item)->{
-		List<Images> images= imagesRepository.getImageByPropertyId(item.getId());
-		System.out.println(item);
-		Map<String, Object> prop = new HashMap<>();
-		prop.put("id", item.getId());
-		prop.put("name", item.getName());
-		prop.put("address", item.getAddress());
-		prop.put("bedroom", item.getBedroom());
-		prop.put("washroom", item.getWashroom());
-		prop.put("garage", item.getGarage());
-		prop.put("description", item.getDescription());
-		prop.put("area", item.getArea());
-		prop.put("ownerName", item.getOwnerName());
-		prop.put("isavailable", item.getIsavailable());
-		prop.put("phoneNumber", item.getPhoneNumber().replaceAll(".(?=.{4})", "*"));
-		prop.put("frontImage", item.getFrontImage());
-		prop.put("latitude", item.getLatitude());
-		prop.put("longitude", item.getLongitude());
-		prop.put("property_type", item.getPropertyType());
-		prop.put("allowed", item.getAllowed());
-		prop.put("furnish", item.getFurnish());
-		prop.put("dateCreated", item.getDateCreated());
-		prop.put("DateModified", item.getDateModified());
-		prop.put("price", item.getPrice());
-		prop.put("maintainance", item.getMaintainance());
-		prop.put("security", item.getSecurity());
-		prop.put("images", images);
-		propList.add(prop);
-		});
+		if (propertiesDetails.size() != 0) {
+			propertiesDetails.forEach((item) -> {
+				List<Images> images = imagesRepository.getImageByPropertyId(item.getId());
+				System.out.println(item);
+				Map<String, Object> prop = new HashMap<>();
+				prop.put("id", item.getId());
+				prop.put("name", item.getName());
+				prop.put("address", item.getAddress());
+				prop.put("bedroom", item.getBedroom());
+				prop.put("washroom", item.getWashroom());
+				prop.put("garage", item.getGarage());
+				prop.put("description", item.getDescription());
+				prop.put("area", item.getArea());
+				prop.put("ownerName", item.getOwnerName());
+				prop.put("isavailable", item.getIsavailable());
+				prop.put("phoneNumber", item.getPhoneNumber().replaceAll(".(?=.{4})", "*"));
+				prop.put("frontImage", item.getFrontImage());
+				prop.put("latitude", item.getLatitude());
+				prop.put("longitude", item.getLongitude());
+				prop.put("property_type", item.getPropertyType());
+				prop.put("allowed", item.getAllowed());
+				prop.put("furnish", item.getFurnish());
+				prop.put("dateCreated", item.getDateCreated());
+				prop.put("DateModified", item.getDateModified());
+				prop.put("price", item.getPrice());
+				prop.put("maintainance", item.getMaintainance());
+				prop.put("security", item.getSecurity());
+				prop.put("images", images);
+				propList.add(prop);
+			});
 		}
-//		
-	return propList;	
+		//
+		return propList;
 	}
+
+	public void scheduleAppointment(Map<String,String> request,String cidLocation) {
+		String images = (String) request.get("images");
+		String username = (String) request.get("username");
+		String propertyId = request.get("propertyId");
+		Interested interested= interestedRepository.findByUsernameAndPropety(username, request.get("propertyId"));
+		if(interested!=null) {
+		interested.setAppointment(request.get("scheduledDate")+"  "+ request.get("scheduleTime"));
+		interestedRepository.save(interested);
+		}else {
+			String[] fileData = images.split(",");
+			System.out.println(fileData[0]);
+			String filename = username.replaceAll("[^a-zA-Z0-9]", "") + "_" + propertyId + "_prop" + ".jpeg";
+			File file = new File(cidLocation + filename);
+			
+			try (FileOutputStream fos = new FileOutputStream(file);) {
+				byte[] decoder = Base64.getDecoder().decode(fileData[1]);
+
+				fos.write(decoder);
+				System.out.println("image File Saved");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			Users user=usersRepository.findByUsername(request.get("username"));
+			Interested interestedModel= new Interested();
+			interestedModel.setFilename(filename);
+			interestedModel.setUsername(request.get("username"));
+			interestedModel.setAppointment(request.get("scheduledDate")+"  "+ request.get("scheduleTime"));
+			interestedModel.setPropertyId(request.get("propertyId"));
+			interestedModel.setStatus("Interested");
+			interestedModel.setEmail(user.getEmail());
+			interestedModel.setFullName(user.getFullName());
+			interestedModel.setPhoneNumber(user.getPhoneNumber());
+			interestedRepository.save(interestedModel);
+		}
+	}
+	public void updateProperty(Map<String, Object> request) {
+		PropertiesDetails propertiesDetails = propertiesDetailsRepository.findById((Integer) request.get("id")).get();
+		if (propertiesDetails != null) {
+			propertiesDetails.setAddress((String) request.get("address"));
+			propertiesDetails.setBedroom((String) request.get("bedroom"));
+			propertiesDetails.setArea(Integer.parseInt(String.valueOf(request.get("area"))));
+			propertiesDetails.setPrice(Integer.parseInt(String.valueOf(request.get("price"))));
+			propertiesDetails.setFurnish((String) request.get("furnish"));
+			propertiesDetails.setCity((String) request.get("city"));
+			propertiesDetails.setState((String) request.get("state"));
+			propertiesDetails.setCountry((String) request.get("country"));
+			propertiesDetails.setLocality((String) request.get("locality"));
+			propertiesDetails.setDescription((String) request.get("description"));
+			// propertiesDetails.setFrontImage(frontImage);
+			propertiesDetails.setGarage((String) request.get("garage"));
+			propertiesDetails.setIsavailable(1);
+			propertiesDetails.setLatitude(String.valueOf(request.get("latitude")));
+			propertiesDetails.setPropertyType((String) request.get("property_type"));
+			propertiesDetails.setAllowed((String) request.get("allowed"));
+			propertiesDetails.setLongitude(String.valueOf(request.get("longitude")));
+			propertiesDetails.setName((String) request.get("name"));
+			propertiesDetails.setPhoneNumber((String) request.get("phoneNumber"));
+			propertiesDetails.setWashroom((String) request.get("washroom"));
+			propertiesDetails.setMaintainance((String) request.get("maintainance"));
+			propertiesDetails.setSecurity((String) request.get("security"));
+			propertiesDetailsRepository.save(propertiesDetails);
+
+		}
+		// propertiesService.addProperties(propertiesDetails);
+	}
+
+	public void updateImages(Map<String, Object> request, String projectLocation) {
+		List<Map<String, String>> images = (List<Map<String, String>>) request.get("images");
+		String ownerName = (String) request.get("ownerName");
+		String propertyId = (String) request.get("propertyId");
+		List<Images> imageList = imagesRepository
+				.getImageByPropertyId(Integer.parseInt((String) request.get("propertyId")));
+		imageList.forEach(items -> {
+			imagesRepository.deleteById(items.getId());
+			File file = new File(projectLocation + items.getImageName());
+			if (file.delete()) {
+				System.out.println("File deleted successfully");
+			} else {
+				System.out.println("Failed to delete the file");
+			}
+		});
+		List<Images> imgList = new ArrayList<>();
+		images.forEach(item -> {
+			Images img = new Images();
+			String[] fileData = item.get("fileSource").split(",");
+			String filename = ownerName.replaceAll("[^a-zA-Z0-9]", "") + "_" + propertyId + "_prop"
+					+ String.valueOf(item.get("index")) + ".jpeg";
+			File file = new File(projectLocation + filename);
+			// images.add(filename);
+			img.setImageName(filename);
+			// if (i == 0) {
+			// img.setIsBanner(1);
+			// }
+			img.setPropertyId(Integer.parseInt(propertyId));
+			imgList.add(img);
+			try (FileOutputStream fos = new FileOutputStream(file);) {
+				byte[] decoder = Base64.getDecoder().decode(fileData[1]);
+
+				fos.write(decoder);
+				System.out.println("image File Saved");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+		imagesRepository.saveAll(imgList);
+	}
+
 	public List<PropertiesDetails> searchProperties(Map<String, String> request) {
 		String condition = "";
 		String bathroom = request.get("bathroom") == null ? null : "washroom=" + request.get("bathroom");
@@ -537,8 +755,14 @@ public class PropertiesDetailsService {
 		}
 
 		System.out.println(condition);
+//		TypedQuery<PropertiesDetails> query = em.createQuery("SELECT * FROM properties_details WHERE "+condition, PropertiesDetails.class);
+//		PropertiesDetails pd= query.getSingleResult();
+//		System.out.println("#######################@@@@@@@@@@@@@@@@@@@@@@@##########");
+//		System.out.println(pd.getLatitude());
+//		PropertiesDetails pd = new PropertiesDetails();
+//		pd.b
 		// if(address==null) {
-		return propertiesDetailsRepository.searchProperties(condition);
+		return propertiesDetailsRepository.searchProperties("SELECT * FROM properties_details where "+condition);
 		// }else {
 		// if(address==null) {
 		// propertiesDetailsRepository.searchProperties(condition,);
@@ -549,14 +773,14 @@ public class PropertiesDetailsService {
 		// return response;
 	}
 
-	public void addProperties(Map<String, Object> request,String projectLocation) {
+	public void addProperties(Map<String, Object> request, String projectLocation) {
 		ArrayList<String> fileSource = (ArrayList<String>) request.get("fileSource");
 		System.out.println();
 		String ownerName = (String) request.get("ownerName");
 		ArrayList<String> images = new ArrayList<>();
 		// "D:\\proj\\realestate\\vicidialui\\src\\assets\\properties\\" + ownerName +
 		// "_prop1.jpeg";
-		
+
 		PropertiesDetails propertiesDetails = new PropertiesDetails();
 		propertiesDetails.setAddress((String) request.get("address"));
 		propertiesDetails.setBedroom((String) request.get("bedroom"));
@@ -568,6 +792,8 @@ public class PropertiesDetailsService {
 		propertiesDetails.setCountry((String) request.get("country"));
 		propertiesDetails.setLocality((String) request.get("locality"));
 		propertiesDetails.setDescription((String) request.get("description"));
+		propertiesDetails.setModular((String) request.get("modular"));
+		propertiesDetails.setModular((String) request.get("parking"));
 		// propertiesDetails.setFrontImage(frontImage);
 		propertiesDetails.setGarage((String) request.get("garage"));
 		propertiesDetails.setIsavailable(1);
@@ -582,18 +808,18 @@ public class PropertiesDetailsService {
 		propertiesDetails.setMaintainance((String) request.get("maintainance"));
 		propertiesDetails.setSecurity((String) request.get("security"));
 		// propertiesService.addProperties(propertiesDetails);
-		PropertiesDetails propertiesDetailsResponse= propertiesDetailsRepository.save(propertiesDetails);
-		
+		PropertiesDetails propertiesDetailsResponse = propertiesDetailsRepository.save(propertiesDetails);
+
 		List<Images> imgList = new ArrayList<>();
 		for (int i = 0; i < fileSource.size(); i++) {
 			Images img = new Images();
 			String[] fileData = fileSource.get(i).split(",");
-			String filename =  ownerName +"_"+propertiesDetailsResponse.getId()+ "_prop" +i+ ".jpeg";
-			File file = new File(projectLocation+filename);
+			String filename = ownerName + "_" + propertiesDetailsResponse.getId() + "_prop" + i + ".jpeg";
+			File file = new File(projectLocation + filename);
 			images.add(filename);
 			img.setImageName(filename);
-			if(i==0) {
-			img.setIsBanner(1);
+			if (i == 0) {
+				img.setIsBanner(1);
 			}
 			img.setPropertyId(propertiesDetailsResponse.getId());
 			imgList.add(img);
@@ -605,18 +831,18 @@ public class PropertiesDetailsService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 		imagesRepository.saveAll(imgList);
-		
+
 	}
 
 	public List<Map<String, Object>> findPropertiesNearMe(Map<String, String> request) {
 		List<Map<String, Object>> propertyList = new ArrayList<>();
 		propertiesDetailsRepository.findPropertiesNearMe(request.get("latitude"), request.get("longitude"))
 				.forEach((item) -> {
-					System.out.println((Integer)item[0]);
-					List<Images> images= imagesRepository.getImageByPropertyId((Integer)item[0]);
+					System.out.println((Integer) item[0]);
+					List<Images> images = imagesRepository.getImageByPropertyId((Integer) item[0]);
 					System.out.println(item);
 					Map<String, Object> prop = new HashMap<>();
 					prop.put("id", item[0]);
@@ -643,39 +869,45 @@ public class PropertiesDetailsService {
 				});
 		return propertyList;
 	}
-	public Map<String, Object> fetchPropertiesById(int id) {
-//		List<Map<String, Object>> propertyList = new ArrayList<>();
-		PropertiesDetails item=propertiesDetailsRepository.fetchPropertiesById(id);
-//				.forEach((item) -> {
-					List<Images> images= imagesRepository.getImageByPropertyId(id);
-					System.out.println(item);
-					Map<String, Object> prop = new HashMap<>();
-					prop.put("id", item.getId());
-					prop.put("name", item.getName());
-					prop.put("address", item.getAddress());
-					prop.put("bedroom", item.getBedroom());
-					prop.put("washroom", item.getWashroom());
-					prop.put("garage", item.getGarage());
-					prop.put("description", item.getDescription());
-					prop.put("area", item.getArea());
-					prop.put("ownerName", item.getOwnerName());
-					prop.put("isavailable", item.getIsavailable());
-					prop.put("phoneNumber", item.getPhoneNumber().replaceAll(".(?=.{4})", "*"));
-					prop.put("frontImage", item.getFrontImage());
-					prop.put("latitude", item.getLatitude());
-					prop.put("longitude", item.getLongitude());
-					prop.put("property_type", item.getPropertyType());
-					prop.put("allowed", item.getAllowed());
-					prop.put("furnish", item.getFurnish());
-					prop.put("dateCreated", item.getDateCreated());
-					prop.put("DateModified", item.getDateModified());
-					prop.put("price", item.getPrice());
-					prop.put("maintainance", item.getMaintainance());
-					prop.put("security", item.getSecurity());
-					prop.put("images", images);
 
-//					propertyList.add(prop);
-//				});
+	public Map<String, Object> fetchPropertiesById(int id) {
+		// List<Map<String, Object>> propertyList = new ArrayList<>();
+		PropertiesDetails item = propertiesDetailsRepository.fetchPropertiesById(id);
+		// .forEach((item) -> {
+		List<Images> images = imagesRepository.getImageByPropertyId(id);
+		System.out.println(item);
+		Map<String, Object> prop = new HashMap<>();
+		prop.put("id", item.getId());
+		prop.put("name", item.getName());
+		prop.put("address", item.getAddress());
+		prop.put("bedroom", item.getBedroom());
+		prop.put("washroom", item.getWashroom());
+		prop.put("garage", item.getGarage());
+		prop.put("description", item.getDescription());
+		prop.put("area", item.getArea());
+		prop.put("ownerName", item.getOwnerName());
+		prop.put("isavailable", item.getIsavailable());
+		prop.put("phoneNumber", item.getPhoneNumber().replaceAll(".(?=.{4})", "*"));
+		prop.put("frontImage", item.getFrontImage());
+		prop.put("latitude", item.getLatitude());
+		prop.put("longitude", item.getLongitude());
+		prop.put("property_type", item.getPropertyType());
+		prop.put("allowed", item.getAllowed());
+		prop.put("furnish", item.getFurnish());
+		prop.put("dateCreated", item.getDateCreated());
+		prop.put("DateModified", item.getDateModified());
+		prop.put("price", item.getPrice());
+		prop.put("maintainance", item.getMaintainance());
+		prop.put("security", item.getSecurity());
+		prop.put("images", images);
+		prop.put("address", item.getAddress());
+		prop.put("locality", item.getLocality());
+		prop.put("city", item.getCity());
+		prop.put("state", item.getState());
+		prop.put("country", item.getCountry());
+
+		// propertyList.add(prop);
+		// });
 		return prop;
 	}
 

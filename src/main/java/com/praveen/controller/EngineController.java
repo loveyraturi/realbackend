@@ -72,6 +72,8 @@ public class EngineController {
 	PropertiesDetailsService propertiesDetailsService;
 	@Value("${project.location}")
 	String projectLocation;
+	@Value("${cid.location}")
+	String cidLocation;
 	
 	@Autowired
 	private UsersRepository userRepository;
@@ -86,16 +88,70 @@ public class EngineController {
 		return propertiesDetailsService.searchAddress(address);
 	}
 	@CrossOrigin
+	@GetMapping("/updatePropertyStatus/{propertyId}/{status}")
+	public Map<String, String> updatePropertyStatus(@PathVariable("propertyId") int propertyId,@PathVariable("status") int status) {
+		propertiesDetailsService.updatePropertyStatus(propertyId,status);
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "true");
+		return response;
+	}
+	@CrossOrigin
+	@GetMapping("/sortlistedProperties/{username}")
+	public List<Map<String, Object>>  sortlistedProperties(@PathVariable("username") String username) {
+		return propertiesDetailsService.sortlistedProperties(username);
+	}
+	@CrossOrigin
+	@GetMapping("/deleteInterestedProperties/{propertyId}/{username}")
+	public Map<String, String>  sortlistedProperties(@PathVariable("propertyId") Integer propertyId,@PathVariable("username") String username) {
+		propertiesDetailsService.deleteInterestedProperties(propertyId,username);
+		Map<String,String> response = new HashMap<>();
+		response.put("status","true");
+		return response;
+	}
+	@CrossOrigin
 	@GetMapping("/fetchPropertiesById/{id}")
 	public Map<String, Object>  fetchPropertiesById(@PathVariable("id") int id) {
 		return propertiesDetailsService.fetchPropertiesById(id);
 	}
-	
 	@CrossOrigin
 	@PostMapping(path = "/searchProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public List<PropertiesDetails> searchProperties(@RequestBody(required = true) Map<String, String> resp) {
 		return propertiesDetailsService.searchProperties(resp);
+	}
+	@CrossOrigin
+	@PostMapping(path = "/scheduleAppointment", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String,String> scheduleAppointment(@RequestBody(required = true) Map<String, String> resp) {
+		propertiesDetailsService.scheduleAppointment(resp,cidLocation);
+		Map<String,String> response= new HashMap<>();
+		 response.put("status", "true");
+		 return response;
+	}
+	@CrossOrigin
+	@PostMapping(path = "/updateImages", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String,String> updateImages(@RequestBody(required = true) Map<String, Object> resp) {
+		propertiesDetailsService.updateImages(resp,projectLocation);
+		Map<String,String> response= new HashMap<>();
+		 response.put("status", "true");
+		 return response;
+	}
+	@CrossOrigin
+	@PostMapping(path = "/updateProperty", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String,String> updateProperty(@RequestBody(required = true) Map<String, Object> resp) {
+		propertiesDetailsService.updateProperty(resp);
+		Map<String,String> response= new HashMap<>();
+		 response.put("status", "true");
+		 return response;
+	}
+	@CrossOrigin
+	@PostMapping(path = "/manageProperties", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public List<Map<String, Object>> manageProperties(@RequestBody(required = true) Map<String, String> resp) {
+		System.out.println("######################################");
+		return propertiesDetailsService.manageProperties(resp);
 	}
 	
 	@CrossOrigin

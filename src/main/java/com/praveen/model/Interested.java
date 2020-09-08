@@ -1,11 +1,14 @@
 package com.praveen.model;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 @Entity
@@ -20,9 +23,23 @@ public class Interested {
 	String phoneNumber;
 	String email;
 	String status;
+	String appointment;
 	Date appliedDate;
+	String filename;
 	
 	
+	public String getFilename() {
+		return filename;
+	}
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
+	public String getAppointment() {
+		return appointment;
+	}
+	public void setAppointment(String appointment) {
+		this.appointment = appointment;
+	}
 	public String getFullName() {
 		return fullName;
 	}
@@ -70,6 +87,16 @@ public class Interested {
 	}
 	public void setAppliedDate(Date appliedDate) {
 		this.appliedDate = appliedDate;
+	}
+	
+	@PrePersist
+	void onCreate() {
+		this.setAppliedDate(new Timestamp((new Date()).getTime()));
+	}
+
+	@PreUpdate
+	void onPersist() {
+		this.setAppliedDate(new Timestamp((new Date()).getTime()));
 	}
 	
 }

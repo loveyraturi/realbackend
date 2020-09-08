@@ -11,6 +11,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
+
 @Entity
 @Table(name = "properties_details")
 public class PropertiesDetails {
@@ -40,10 +41,29 @@ public class PropertiesDetails {
 	String longitude;
 	String maintainance;
     String security;
+    String parking;
+    String modular;
     int isApproved;
 	Date dateCreated;
 	Date DateModified;
 	
+	
+	public String getParking() {
+		return parking;
+	}
+
+	public void setParking(String parking) {
+		this.parking = parking;
+	}
+
+	public String getModular() {
+		return modular;
+	}
+
+	public void setModular(String modular) {
+		this.modular = modular;
+	}
+
 	public int getIsApproved() {
 		return isApproved;
 	}
