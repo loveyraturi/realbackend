@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,12 +39,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.praveen.model.Payments;
 import com.praveen.model.PropertiesDetails;
 
 import org.apache.commons.collections4.MultiMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ResourceUtils;
@@ -56,11 +60,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.view.RedirectView;
+
+import com.praveen.dao.PaymentsRepository;
 import com.praveen.dao.UsersRepository;
 import com.praveen.service.PropertiesDetailsService;
 import com.praveen.service.UsersService;
 
-@RestController
+@Controller
 @RequestMapping("/realestate")
 public class EngineController {
 
@@ -69,83 +77,166 @@ public class EngineController {
 	@Autowired
 	UsersService usersService;
 	@Autowired
+	PaymentsRepository paymentsRepository;
+	@Autowired
 	PropertiesDetailsService propertiesDetailsService;
 	@Value("${project.location}")
 	String projectLocation;
 	@Value("${cid.location}")
 	String cidLocation;
-	
+
+	public enum PaymentMode {
+
+		NB, DC, CC
+	}
+
 	@Autowired
 	private UsersRepository userRepository;
-	
-	@GetMapping("/")
-	public String getEmployees() {
-		return "hihihi";
+
+	@RequestMapping("/")
+	public String home(Map<String, Object> model) {
+		model.put("message", "HowToDoInJava Reader !!");
+		return "index";
+	}
+
+	@RequestMapping("/failure")
+	public String failure(Map<String, Object> model) {
+		return "failure";
+	}
+	@RequestMapping("/success")
+	public String success(Map<String, Object> model) {
+		return "success";
 	}
 	@CrossOrigin
+	@ResponseBody
 	@GetMapping("/searchAddress/{address}")
 	public List<String> searchAddress(@PathVariable("address") String address) {
 		return propertiesDetailsService.searchAddress(address);
 	}
+
 	@CrossOrigin
+	@ResponseBody
 	@GetMapping("/updatePropertyStatus/{propertyId}/{status}")
-	public Map<String, String> updatePropertyStatus(@PathVariable("propertyId") int propertyId,@PathVariable("status") int status) {
-		propertiesDetailsService.updatePropertyStatus(propertyId,status);
+	public Map<String, String> updatePropertyStatus(@PathVariable("propertyId") int propertyId,
+			@PathVariable("status") int status) {
+		propertiesDetailsService.updatePropertyStatus(propertyId, status);
 		Map<String, String> response = new HashMap<>();
 		response.put("status", "true");
 		return response;
 	}
+
 	@CrossOrigin
+	@ResponseBody
 	@GetMapping("/sortlistedProperties/{username}")
-	public List<Map<String, Object>>  sortlistedProperties(@PathVariable("username") String username) {
+	public List<Map<String, Object>> sortlistedProperties(@PathVariable("username") String username) {
 		return propertiesDetailsService.sortlistedProperties(username);
 	}
+
 	@CrossOrigin
+	@ResponseBody
 	@GetMapping("/deleteInterestedProperties/{propertyId}/{username}")
-	public Map<String, String>  sortlistedProperties(@PathVariable("propertyId") Integer propertyId,@PathVariable("username") String username) {
-		propertiesDetailsService.deleteInterestedProperties(propertyId,username);
-		Map<String,String> response = new HashMap<>();
-		response.put("status","true");
+	public Map<String, String> sortlistedProperties(@PathVariable("propertyId") Integer propertyId,
+			@PathVariable("username") String username) {
+		propertiesDetailsService.deleteInterestedProperties(propertyId, username);
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "true");
 		return response;
 	}
+
 	@CrossOrigin
+	@ResponseBody
 	@GetMapping("/fetchPropertiesById/{id}")
-	public Map<String, Object>  fetchPropertiesById(@PathVariable("id") int id) {
+	public Map<String, Object> fetchPropertiesById(@PathVariable("id") int id) {
 		return propertiesDetailsService.fetchPropertiesById(id);
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/searchProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public List<PropertiesDetails> searchProperties(@RequestBody(required = true) Map<String, String> resp) {
 		return propertiesDetailsService.searchProperties(resp);
 	}
+
+	@CrossOrigin
+	@PostMapping(path = "/beforePayment", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> beforePayment(@RequestBody(required = true) Map<String, String> resp) {
+		return propertiesDetailsService.beforePayment(resp);
+	}
+
+	// @CrossOrigin
+	// @PostMapping(path = "/afterPayment", consumes =
+	// "application/x-www-form-urlencoded;charset=UTF-8", produces =
+	// "application/json")
+	// @ResponseBody
+	// public Map<String,String> afterPayment(@RequestBody(required = true)
+	// Map<String, Object> resp) {
+	// return propertiesDetailsService.afterPayment(resp);
+	// }
+	@RequestMapping(path = "/afterPayment", method = RequestMethod.POST)
+	public String afterPayment(@RequestParam String mihpayid, @RequestParam String status,
+			@RequestParam PaymentMode mode, @RequestParam String txnid, @RequestParam String bankcode,
+			@RequestParam String PG_TYPE, @RequestParam String bank_ref_num, @RequestParam String amount,
+			@RequestParam String addedon, @RequestParam String productinfo, @RequestParam String email,
+			@RequestParam String payuMoneyId) {
+		Payments paymentExisting= paymentsRepository.findByTxnId(txnid);
+		if(paymentExisting==null) {
+		String[] trxnArray = txnid.split("_");
+		String username = trxnArray[0];
+		Payments payment = new Payments();
+		payment.setAddedon(addedon);
+		payment.setMihpayid(mihpayid);
+		payment.setStatus(status);
+		payment.setPayuMoneyId("");
+		payment.setTxnid(txnid);
+		payment.setBankcode(bankcode);
+		payment.setPG_TYPE(PG_TYPE);
+		payment.setBank_ref_num(bank_ref_num);
+		payment.setAmount(amount);
+		payment.setProductinfo(productinfo);
+		payment.setEmail(email);
+		payment.setPayuMoneyId(payuMoneyId);
+		payment.setUsername(username);
+		paymentsRepository.save(payment);
+		}
+		if(status.equals("failure")) {
+			return "failure";
+		}else {
+			return "success";
+		}
+		
+	}
+
 	@CrossOrigin
 	@PostMapping(path = "/scheduleAppointment", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String,String> scheduleAppointment(@RequestBody(required = true) Map<String, String> resp) {
-		propertiesDetailsService.scheduleAppointment(resp,cidLocation);
-		Map<String,String> response= new HashMap<>();
-		 response.put("status", "true");
-		 return response;
+	public Map<String, String> scheduleAppointment(@RequestBody(required = true) Map<String, String> resp) {
+		propertiesDetailsService.scheduleAppointment(resp, cidLocation);
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "true");
+		return response;
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/updateImages", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String,String> updateImages(@RequestBody(required = true) Map<String, Object> resp) {
-		propertiesDetailsService.updateImages(resp,projectLocation);
-		Map<String,String> response= new HashMap<>();
-		 response.put("status", "true");
-		 return response;
+	public Map<String, String> updateImages(@RequestBody(required = true) Map<String, Object> resp) {
+		propertiesDetailsService.updateImages(resp, projectLocation);
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "true");
+		return response;
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/updateProperty", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String,String> updateProperty(@RequestBody(required = true) Map<String, Object> resp) {
+	public Map<String, String> updateProperty(@RequestBody(required = true) Map<String, Object> resp) {
 		propertiesDetailsService.updateProperty(resp);
-		Map<String,String> response= new HashMap<>();
-		 response.put("status", "true");
-		 return response;
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "true");
+		return response;
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/manageProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
@@ -153,64 +244,79 @@ public class EngineController {
 		System.out.println("######################################");
 		return propertiesDetailsService.manageProperties(resp);
 	}
-	
+
 	@CrossOrigin
 	@PostMapping(path = "/fetchreportdatabetween", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public ByteArrayResource fetchreportdatabetween(@RequestBody(required = true) Map<String, Object> resp) {
-		return usersService.fetchreportdatabetween(resp,projectLocation);
+		return usersService.fetchreportdatabetween(resp, projectLocation);
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/fetchreportdatabetweenpropertyadded", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public ByteArrayResource fetchreportdatabetweenpropertyadded(@RequestBody(required = true) Map<String, Object> resp) {
-		return propertiesDetailsService.fetchreportdatabetweenpropertyadded(resp,projectLocation);
+	public ByteArrayResource fetchreportdatabetweenpropertyadded(
+			@RequestBody(required = true) Map<String, Object> resp) {
+		return propertiesDetailsService.fetchreportdatabetweenpropertyadded(resp, projectLocation);
 	}
-	
+
 	@CrossOrigin
 	@PostMapping(path = "/mainProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public List<Map<String,Object>> mainProperties(@RequestBody(required = true) Map<String, String> resp) {
+	public List<Map<String, Object>> mainProperties(@RequestBody(required = true) Map<String, String> resp) {
 		return propertiesDetailsService.mainProperties(resp);
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/validateuser", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> validateUser(@RequestBody(required = true) Map<String, String> resp) {
 		return usersService.validateUser(resp);
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/validateUserName", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> validateUserName(@RequestBody(required = true) Map<String, String> resp) {
 		return usersService.validateUserName(resp);
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/addProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> addProperties(@RequestBody(required = true) Map<String, Object> resp) {
-		Map<String,String> response= new HashMap<>();
-		propertiesDetailsService.addProperties(resp,projectLocation);
-		 response.put("status", "true");
-		 return response;
+		Map<String, String> response = new HashMap<>();
+		propertiesDetailsService.addProperties(resp, projectLocation);
+		response.put("status", "true");
+		return response;
 	}
+
+	@CrossOrigin
+	@PostMapping(path = "/matchRequirements", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> matchRequirements(@RequestBody(required = true) Map<String, Object> resp) {
+		Map<String, String> response = new HashMap<>();
+		propertiesDetailsService.matchRequirements(resp);
+		response.put("status", "true");
+		return response;
+	}
+
 	@CrossOrigin
 	@PostMapping(path = "/findPropertiesNearMe", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public List<Map<String, Object>> findPropertiesNearMe(@RequestBody(required = true) Map<String, String> resp) {
 		return propertiesDetailsService.findPropertiesNearMe(resp);
-		 
+
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/registerUser", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> registerUser(@RequestBody(required = true) Map<String, String> resp) {
 		System.out.println(resp);
-		Map<String,String> response= new HashMap<>();
-		usersService.registerUser(resp);
-		 response.put("status", "true");
-		 return response;
+		return usersService.registerUser(resp);
 	}
+
 	@CrossOrigin
 	@PostMapping(path = "/interested", consumes = "application/json", produces = "application/json")
 	@ResponseBody

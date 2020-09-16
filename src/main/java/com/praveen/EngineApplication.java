@@ -14,9 +14,7 @@ import com.praveen.controller.EngineController;
 
 @SpringBootApplication
 @ComponentScan(basePackages ={"com.praveen.service","com.praveen.controller","com.praveen.dao","com.praveen.model","com.praveen.config"})
-
 public class EngineApplication extends SpringBootServletInitializer {
-//SpringBootDemoApplication
 
 	public static void main(String[] args) {
 		SpringApplication.run(EngineApplication.class, args);

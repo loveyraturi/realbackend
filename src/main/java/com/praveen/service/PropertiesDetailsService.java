@@ -49,12 +49,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.praveen.dao.ImagesRepository;
 import com.praveen.dao.InterestedRepository;
+import com.praveen.dao.MatchingRequirementsRepository;
 import com.praveen.dao.PropertiesDetailsRepository;
+import com.praveen.dao.SubscriptionRepository;
 import com.praveen.dao.UsersRepository;
 import com.praveen.model.Images;
 import com.praveen.model.Interested;
 import com.praveen.model.PropertiesDetails;
+import com.praveen.model.Subscription;
 import com.praveen.model.Users;
+import com.praveen.model.MatchingRequirements;
 
 @Service
 public class PropertiesDetailsService {
@@ -66,9 +70,13 @@ public class PropertiesDetailsService {
 	InterestedRepository interestedRepository;
 	@Autowired
 	UsersRepository usersRepository;
+	@Autowired
+	SubscriptionRepository subscriptionRepository;
+	@Autowired
+	MatchingRequirementsRepository matchingRequirementsRepository;
 	@PersistenceContext
 	public EntityManager em;
-	
+
 	public List<Map<String, Object>> manageProperties(Map<String, String> respo) {
 		String UserName = respo.get("username");
 		List<Map<String, Object>> response = new ArrayList<>();
@@ -312,10 +320,10 @@ public class PropertiesDetailsService {
 		List<PropertiesDetails> propertiesDetails = new ArrayList<>();
 		if (request.get("priceRange").contains("<")) {
 			propertiesDetails.addAll(propertiesDetailsRepository.mainPropertiesGreaterPrice(request.get("address"),
-					request.get("priceRange"), request.get("propertyBhk"), request.get("type")));
+					request.get("priceRange"), request.get("type")));
 		} else if (request.get("priceRange").contains(">")) {
 			propertiesDetails.addAll(propertiesDetailsRepository.mainPropertiesLessPrice(request.get("address"),
-					request.get("priceRange"), request.get("propertyBhk"), request.get("type")));
+					request.get("priceRange"), request.get("type")));
 
 		} else {
 			System.out.println("between");
@@ -328,7 +336,7 @@ public class PropertiesDetailsService {
 					+ request.get("propertyBhk"));
 			propertiesDetails
 					.addAll(propertiesDetailsRepository.mainPropertiesRangePrice("%" + request.get("address") + "%",
-							priceRange[0], priceRange[1], request.get("propertyBhk"), request.get("type")));
+							priceRange[0], priceRange[1], request.get("type")));
 
 		}
 		List<Map<String, Object>> propList = new ArrayList<>();
@@ -368,20 +376,20 @@ public class PropertiesDetailsService {
 		return propList;
 	}
 
-	public void scheduleAppointment(Map<String,String> request,String cidLocation) {
+	public void scheduleAppointment(Map<String, String> request, String cidLocation) {
 		String images = (String) request.get("images");
 		String username = (String) request.get("username");
 		String propertyId = request.get("propertyId");
-		Interested interested= interestedRepository.findByUsernameAndPropety(username, request.get("propertyId"));
-		if(interested!=null) {
-		interested.setAppointment(request.get("scheduledDate")+"  "+ request.get("scheduleTime"));
-		interestedRepository.save(interested);
-		}else {
+		Interested interested = interestedRepository.findByUsernameAndPropety(username, request.get("propertyId"));
+		if (interested != null) {
+			interested.setAppointment(request.get("scheduledDate") + "  " + request.get("scheduleTime"));
+			interestedRepository.save(interested);
+		} else {
 			String[] fileData = images.split(",");
 			System.out.println(fileData[0]);
 			String filename = username.replaceAll("[^a-zA-Z0-9]", "") + "_" + propertyId + "_prop" + ".jpeg";
 			File file = new File(cidLocation + filename);
-			
+
 			try (FileOutputStream fos = new FileOutputStream(file);) {
 				byte[] decoder = Base64.getDecoder().decode(fileData[1]);
 
@@ -390,11 +398,11 @@ public class PropertiesDetailsService {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			Users user=usersRepository.findByUsername(request.get("username"));
-			Interested interestedModel= new Interested();
+			Users user = usersRepository.findByUsername(request.get("username"));
+			Interested interestedModel = new Interested();
 			interestedModel.setFilename(filename);
 			interestedModel.setUsername(request.get("username"));
-			interestedModel.setAppointment(request.get("scheduledDate")+"  "+ request.get("scheduleTime"));
+			interestedModel.setAppointment(request.get("scheduledDate") + "  " + request.get("scheduleTime"));
 			interestedModel.setPropertyId(request.get("propertyId"));
 			interestedModel.setStatus("Interested");
 			interestedModel.setEmail(user.getEmail());
@@ -403,6 +411,7 @@ public class PropertiesDetailsService {
 			interestedRepository.save(interestedModel);
 		}
 	}
+
 	public void updateProperty(Map<String, Object> request) {
 		PropertiesDetails propertiesDetails = propertiesDetailsRepository.findById((Integer) request.get("id")).get();
 		if (propertiesDetails != null) {
@@ -474,7 +483,28 @@ public class PropertiesDetailsService {
 		});
 		imagesRepository.saveAll(imgList);
 	}
-
+public Map<String, String> afterPayment(Map<String, Object> request) {
+	Map<String,String> response = new HashMap<>();
+	response.put("status", "true");
+	System.out.println(request);
+//	Subscription subs=subscriptionRepository.getPaymentByTrxnId(request.get("trxnId"));
+//	if(subs!=null) {
+//		subs.setPaymentId(request.get("paymentId"));
+//		subs.setStatus(request.get("status"));
+//	}
+	return response;
+}
+public Map<String, String> beforePayment(Map<String, String> request) {
+	Map<String,String> response = new HashMap<>();
+	response.put("status", "true");
+	Subscription subs = new Subscription();
+	subs.setPropertyId(Integer.parseInt(request.get("propertyId")));
+	subs.setUsername(request.get("username"));
+	subs.setTrxnId(request.get("trxnId"));
+	subs.setType(request.get("type"));
+	subscriptionRepository.save(subs);
+	return response;
+}
 	public List<PropertiesDetails> searchProperties(Map<String, String> request) {
 		String condition = "";
 		String bathroom = request.get("bathroom") == null ? null : "washroom=" + request.get("bathroom");
@@ -755,14 +785,15 @@ public class PropertiesDetailsService {
 		}
 
 		System.out.println(condition);
-//		TypedQuery<PropertiesDetails> query = em.createQuery("SELECT * FROM properties_details WHERE "+condition, PropertiesDetails.class);
-//		PropertiesDetails pd= query.getSingleResult();
-//		System.out.println("#######################@@@@@@@@@@@@@@@@@@@@@@@##########");
-//		System.out.println(pd.getLatitude());
-//		PropertiesDetails pd = new PropertiesDetails();
-//		pd.b
+		// TypedQuery<PropertiesDetails> query = em.createQuery("SELECT * FROM
+		// properties_details WHERE "+condition, PropertiesDetails.class);
+		// PropertiesDetails pd= query.getSingleResult();
+		// System.out.println("#######################@@@@@@@@@@@@@@@@@@@@@@@##########");
+		// System.out.println(pd.getLatitude());
+		// PropertiesDetails pd = new PropertiesDetails();
+		// pd.b
 		// if(address==null) {
-		return propertiesDetailsRepository.searchProperties("SELECT * FROM properties_details where "+condition);
+		return propertiesDetailsRepository.searchProperties("SELECT * FROM properties_details where " + condition);
 		// }else {
 		// if(address==null) {
 		// propertiesDetailsRepository.searchProperties(condition,);
@@ -773,14 +804,57 @@ public class PropertiesDetailsService {
 		// return response;
 	}
 
+	public void matchRequirements(Map<String, Object> request) {
+		String userName = (String) request.get("username");
+		MatchingRequirements matchingRequirements = matchingRequirementsRepository.findByUsername(userName);
+		if (matchingRequirements != null) {
+			matchingRequirements.setBedroom((String) request.get("bedroom"));
+			matchingRequirements.setArea(Integer.parseInt((String) request.get("area")));
+			matchingRequirements.setPrice(Integer.parseInt((String) request.get("price")));
+			matchingRequirements.setFurnish((String) request.get("furnish"));
+			matchingRequirements.setCity((String) request.get("city"));
+			matchingRequirements.setState((String) request.get("state"));
+			matchingRequirements.setCountry((String) request.get("country"));
+			matchingRequirements.setLocality((String) request.get("locality"));
+			matchingRequirements.setModular((String) request.get("modular"));
+			matchingRequirements.setModular((String) request.get("parking"));
+			matchingRequirements.setPropertyType((String) request.get("propertyType"));
+			matchingRequirements.setBhk((String) request.get("name"));
+			matchingRequirements.setUsername(userName);
+			matchingRequirements.setWashroom((String) request.get("washrooms"));
+		} else {
+			matchingRequirements = new MatchingRequirements();
+			matchingRequirements.setBedroom((String) request.get("bedroom"));
+			matchingRequirements.setArea(Integer.parseInt((String) request.get("area")));
+			matchingRequirements.setPrice(Integer.parseInt((String) request.get("price")));
+			matchingRequirements.setFurnish((String) request.get("furnish"));
+			matchingRequirements.setCity((String) request.get("city"));
+			matchingRequirements.setState((String) request.get("state"));
+			matchingRequirements.setCountry((String) request.get("country"));
+			matchingRequirements.setLocality((String) request.get("locality"));
+			matchingRequirements.setModular((String) request.get("modular"));
+			matchingRequirements.setModular((String) request.get("parking"));
+			matchingRequirements.setPropertyType((String) request.get("propertyType"));
+			matchingRequirements.setBhk((String) request.get("name"));
+			matchingRequirements.setUsername(userName);
+			matchingRequirements.setWashroom((String) request.get("washrooms"));
+		}
+		matchingRequirementsRepository.save(matchingRequirements);
+	}
+
 	public void addProperties(Map<String, Object> request, String projectLocation) {
 		ArrayList<String> fileSource = (ArrayList<String>) request.get("fileSource");
-		System.out.println();
+		ArrayList<Map<String,String>> allowed=(ArrayList<Map<String,String>>) request.get("allowed");
+		String allowedString="";
+		for(Map<String,String> value:allowed) {
+		if(allowedString!="") {
+			allowedString = allowedString+","+value.get("id");
+		}else {
+			allowedString=allowedString+value.get("id");
+		}
+		}
 		String ownerName = (String) request.get("ownerName");
 		ArrayList<String> images = new ArrayList<>();
-		// "D:\\proj\\realestate\\vicidialui\\src\\assets\\properties\\" + ownerName +
-		// "_prop1.jpeg";
-
 		PropertiesDetails propertiesDetails = new PropertiesDetails();
 		propertiesDetails.setAddress((String) request.get("address"));
 		propertiesDetails.setBedroom((String) request.get("bedroom"));
@@ -799,7 +873,7 @@ public class PropertiesDetailsService {
 		propertiesDetails.setIsavailable(1);
 		propertiesDetails.setLatitude(String.valueOf(request.get("latitude")));
 		propertiesDetails.setPropertyType((String) request.get("propertyType"));
-		propertiesDetails.setAllowed(String.join(",", (ArrayList<String>) request.get("allowed")));
+		propertiesDetails.setAllowed(allowedString);
 		propertiesDetails.setLongitude(String.valueOf(request.get("longitude")));
 		propertiesDetails.setName((String) request.get("name"));
 		propertiesDetails.setOwnerName(ownerName);
@@ -833,7 +907,22 @@ public class PropertiesDetailsService {
 			}
 
 		}
+		//saving addressproof
+		String addressProoff="AddressProof_"+propertiesDetailsResponse.getId()+".jpeg";
+		File addProof = new File(projectLocation + addressProoff);
+		String addprf=(String) request.get("addressProof");
+		String[] addprfArray=addprf.split(",");
+		try (FileOutputStream fos1 = new FileOutputStream(addProof);) {
+			byte[] decoder1 = Base64.getDecoder().decode(addprfArray[1]);
+
+			fos1.write(decoder1);
+			System.out.println("address File Saved");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		propertiesDetailsResponse.setAddressProof(addressProoff);
 		imagesRepository.saveAll(imgList);
+		propertiesDetailsRepository.save(propertiesDetailsResponse);
 
 	}
 

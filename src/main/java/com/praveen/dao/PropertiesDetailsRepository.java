@@ -30,12 +30,12 @@ public interface PropertiesDetailsRepository extends JpaRepository<PropertiesDet
 	 List<PropertiesDetails> searchProperties(@Param("condition") String condition);
 	 @Query(value="SELECT city,locality FROM properties_details WHERE city LIKE %:address% or locality LIKE %:address% ;", nativeQuery = true)
 	 List<Object[]> searchAddress(@Param("address") String address);
-	 @Query(value="SELECT * FROM properties_details WHERE (((city LIKE :address or locality LIKE :address) and price > :priceRange) and property_type=:property_type) and name=:propertyBhk ;", nativeQuery = true)
-	 List<PropertiesDetails> mainPropertiesGreaterPrice(@Param("address") String address,@Param("priceRange") String priceRange,@Param("propertyBhk") String propertyBhk,@Param("property_type") String property_type);
-	 @Query(value="SELECT * FROM properties_details WHERE (((city LIKE :address or locality LIKE :address) and price < :priceRange) and property_type=:property_type) and name=:propertyBhk ;", nativeQuery = true)
-	 List<PropertiesDetails> mainPropertiesLessPrice(@Param("address") String address,@Param("priceRange") String priceRange,@Param("propertyBhk") String propertyBhk,@Param("property_type") String property_type);
-	 @Query(value="SELECT * FROM properties_details WHERE (((city LIKE :address or locality LIKE :address) and price between :priceRange and :priceRange2) and property_type=:property_type) and name=:name ;", nativeQuery = true)
-	 List<PropertiesDetails> mainPropertiesRangePrice(@Param("address") String address,@Param("priceRange") String priceRange,@Param("priceRange2") String priceRange2,@Param("name") String name,@Param("property_type") String property_type);
+	 @Query(value="SELECT * FROM properties_details WHERE ((city LIKE :address or locality LIKE :address) and price > :priceRange) and property_type=:property_type and isavailable=1", nativeQuery = true)
+	 List<PropertiesDetails> mainPropertiesGreaterPrice(@Param("address") String address,@Param("priceRange") String priceRange,@Param("property_type") String property_type);
+	 @Query(value="SELECT * FROM properties_details WHERE ((city LIKE :address or locality LIKE :address) and price < :priceRange) and property_type=:property_type and isavailable=1", nativeQuery = true)
+	 List<PropertiesDetails> mainPropertiesLessPrice(@Param("address") String address,@Param("priceRange") String priceRange,@Param("property_type") String property_type);
+	 @Query(value="SELECT * FROM properties_details WHERE ((city LIKE :address or locality LIKE :address) and price between :priceRange and :priceRange2) and property_type=:property_type and isavailable=1", nativeQuery = true)
+	 List<PropertiesDetails> mainPropertiesRangePrice(@Param("address") String address,@Param("priceRange") String priceRange,@Param("priceRange2") String priceRange2,@Param("property_type") String property_type);
 
 	 @Query(value="select * from properties_details where  date_created >= :fromDate and date_created <= :toDate ", nativeQuery = true)
 	 List<PropertiesDetails> fetchreportdatabetweenpropertyadded( @Param("fromDate") Timestamp fromDate,@Param("toDate") Timestamp toDate);

@@ -43,11 +43,20 @@ public class PropertiesDetails {
     String security;
     String parking;
     String modular;
+    String addressProof;
     int isApproved;
 	Date dateCreated;
 	Date DateModified;
 	
 	
+	public String getAddressProof() {
+		return addressProof;
+	}
+
+	public void setAddressProof(String addressProof) {
+		this.addressProof = addressProof;
+	}
+
 	public String getParking() {
 		return parking;
 	}

@@ -63,15 +63,17 @@ public class UsersService {
 	PropertiesDetailsRepository propertiesDetailsRepository;
 	@Autowired
 	InterestedRepository interestedRepository;
+
 	public Map<String, String> validateUserName(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
-		if(userRepository.findByUsername(request.get("username")) != null) {
+		if (userRepository.findByUsername(request.get("username")) != null) {
 			response.put("status", "true");
-		}else {
+		} else {
 			response.put("status", "false");
 		}
 		return response;
 	}
+
 	public Map<String, String> validateUser(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
 
@@ -109,17 +111,43 @@ public class UsersService {
 		return response;
 	}
 
-	public void registerUser(Map<String, String> request) {
-		Users users = new Users();
-		users.setDeviceId(request.get("deviceId"));
-		users.setFullName(request.get("fullName"));
-		users.setPassword(request.get("password"));
-		users.setStatus(request.get("status"));
-		users.setType(request.get("type"));
-		users.setUsername(request.get("username"));
-		users.setPhoneNumber(request.get("phoneNumber"));
-		users.setEmail(request.get("email"));
-		userRepository.save(users);
+	public Map<String, String> registerUser(Map<String, String> request) {
+		Map<String, String> response = new HashMap<>();
+		if (request.get("password") == null) {
+			response.put("status", "false");
+			response.put("message", "Please Enter Password");
+
+		} else if (request.get("type") == null) {
+			response.put("status", "false");
+			response.put("message", "Please Enter User Type");
+
+		} else if (request.get("username") == null) {
+			response.put("status", "false");
+			response.put("message", "Please Enter Username");
+
+		} else if (request.get("phoneNumber") == null) {
+			response.put("status", "false");
+			response.put("message", "Please Enter Phonenumber");
+
+		} else if (request.get("email") == null) {
+			response.put("status", "false");
+			response.put("message", "Please Enter Email");
+
+		} else {
+			response.put("status", "true");
+			response.put("message", "Successfully Registered");
+			Users users = new Users();
+			users.setDeviceId(request.get("deviceId"));
+			users.setFullName(request.get("fullName"));
+			users.setPassword(request.get("password"));
+			users.setStatus(request.get("status"));
+			users.setType(request.get("type"));
+			users.setUsername(request.get("username"));
+			users.setPhoneNumber(request.get("phoneNumber"));
+			users.setEmail(request.get("email"));
+			userRepository.save(users);
+		}
+		return response;
 
 	}
 
@@ -128,11 +156,12 @@ public class UsersService {
 		String username = request.get("username");
 		System.out.println(appliedDate);
 		System.out.println(request.get("property_id"));
-		Interested alreadyAvailable = interestedRepository.findByUsernameAndPropety(username,request.get("property_id"));
-//		System.out.println(alreadyAvailable.getId());
+		Interested alreadyAvailable = interestedRepository.findByUsernameAndPropety(username,
+				request.get("property_id"));
+		// System.out.println(alreadyAvailable.getId());
 		Users user = userRepository.findByUsername(username);
 		Map<String, String> response = new HashMap<>();
-//		Interested interestedResponse=null;
+		// Interested interestedResponse=null;
 		if (alreadyAvailable == null) {
 			Interested interested = new Interested();
 			interested.setFullName(user.getFullName());
@@ -145,12 +174,12 @@ public class UsersService {
 			interestedRepository.save(interested);
 			response.put("status", "true");
 			response.put("message", "Thanks for showing your Interest");
-		}else {
+		} else {
 			response.put("status", "true");
-			response.put("message", "Your application is already registerd with us your application id is "+alreadyAvailable.getId());
+			response.put("message",
+					"Your application is already registerd with us your application id is " + alreadyAvailable.getId());
 		}
-		
-		
+
 		return response;
 	}
 
@@ -175,7 +204,8 @@ public class UsersService {
 		if (phoneNumber.equals("")) {
 			resultLeads.addAll(interestedRepository.fetchreportdatabetween(dateFromTimestamp, dateToTimestamp));
 		} else {
-			resultLeads.addAll(interestedRepository.fetchReportDataBetweenbyPhoneNumber(phoneNumber, dateFromTimestamp,dateToTimestamp));
+			resultLeads.addAll(interestedRepository.fetchReportDataBetweenbyPhoneNumber(phoneNumber, dateFromTimestamp,
+					dateToTimestamp));
 		}
 		try {
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
