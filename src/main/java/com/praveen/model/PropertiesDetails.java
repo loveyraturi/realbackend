@@ -47,8 +47,16 @@ public class PropertiesDetails {
     int isApproved;
 	Date dateCreated;
 	Date DateModified;
+	String amenities;
 	
-	
+	public String getAmenities() {
+		return amenities;
+	}
+
+	public void setAmenities(String amenities) {
+		this.amenities = amenities;
+	}
+
 	public String getAddressProof() {
 		return addressProof;
 	}

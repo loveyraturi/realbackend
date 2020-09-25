@@ -63,7 +63,10 @@ public class UsersService {
 	PropertiesDetailsRepository propertiesDetailsRepository;
 	@Autowired
 	InterestedRepository interestedRepository;
-
+	public Users searchUserByEmailOrUsername(String type){
+		System.out.println(type);
+		return userRepository.searchUserByEmailOrUsername(type);
+	}
 	public Map<String, String> validateUserName(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
 		if (userRepository.findByUsername(request.get("username")) != null) {
@@ -73,7 +76,21 @@ public class UsersService {
 		}
 		return response;
 	}
-
+	public Map<String, String> resetPassword(Map<String, String> request) {
+		Map<String, String> response = new HashMap<>();
+		Users user=userRepository.findByEmailAndUuid(request.get("email"),request.get("uuid"));
+		if(user!=null) {
+			user.setPassword(request.get("password"));
+			userRepository.save(user);
+			response.put("status", "true");
+			response.put("message", "Successfully updated Password");
+		}else {
+			response.put("status", "false");
+			response.put("message", "Error Authenticating user");
+		}
+		
+		return response;
+	}
 	public Map<String, String> validateUser(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
 

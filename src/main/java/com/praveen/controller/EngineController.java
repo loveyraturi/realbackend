@@ -41,6 +41,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.praveen.model.Payments;
 import com.praveen.model.PropertiesDetails;
+import com.praveen.model.Users;
 
 import org.apache.commons.collections4.MultiMap;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +65,10 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import com.praveen.dao.PaymentsRepository;
+import com.praveen.dao.PropertiesDetailsRepository;
 import com.praveen.dao.UsersRepository;
+import com.praveen.service.AdminUserService;
+import com.praveen.service.EmailServiceImpl;
 import com.praveen.service.PropertiesDetailsService;
 import com.praveen.service.UsersService;
 
@@ -80,10 +84,21 @@ public class EngineController {
 	PaymentsRepository paymentsRepository;
 	@Autowired
 	PropertiesDetailsService propertiesDetailsService;
+	@Autowired
+	PropertiesDetailsRepository propertiesDetailsRepository;
+	@Autowired
+	UsersRepository usersRepository;
+	@Autowired
+	AdminUserService adminUserService;
+
+	@Autowired
+	EmailServiceImpl emailServiceImpl;
 	@Value("${project.location}")
 	String projectLocation;
 	@Value("${cid.location}")
 	String cidLocation;
+	@Value("${spring.mail.username}")
+	String username;
 
 	public enum PaymentMode {
 
@@ -99,14 +114,30 @@ public class EngineController {
 		return "index";
 	}
 
+	@CrossOrigin
+	@PostMapping(path = "/sendemail", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> sendEmail(@RequestBody(required = true) Map<String, String> resp) {
+		return emailServiceImpl.sendSimpleMessage(resp);
+	}
+
+	@CrossOrigin
+	@PostMapping(path = "/resetPassword", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> resetPassword(@RequestBody(required = true) Map<String, String> resp) {
+		return usersService.resetPassword(resp);
+	}
+
 	@RequestMapping("/failure")
 	public String failure(Map<String, Object> model) {
 		return "failure";
 	}
+
 	@RequestMapping("/success")
 	public String success(Map<String, Object> model) {
 		return "success";
 	}
+
 	@CrossOrigin
 	@ResponseBody
 	@GetMapping("/searchAddress/{address}")
@@ -149,12 +180,80 @@ public class EngineController {
 	public Map<String, Object> fetchPropertiesById(@PathVariable("id") int id) {
 		return propertiesDetailsService.fetchPropertiesById(id);
 	}
-
+	
+	@CrossOrigin
+	@ResponseBody
+	@GetMapping("/fetchProperties")
+	public List<PropertiesDetails> fetchProperties() {
+		return propertiesDetailsRepository.findAll();
+	}
+	
+	@CrossOrigin
+	@ResponseBody
+	@GetMapping("/fetchUnapprovedProperties")
+	public List<PropertiesDetails> fetchUnapprovedProperties() {
+		return propertiesDetailsRepository.fetchUnapprovedProperties();
+	}
+	@CrossOrigin
+	@ResponseBody
+	@GetMapping("/fetchAllTenants")
+	public List<Users> fetchAllTenants() {
+		return userRepository.findAllTenants();
+	}
+	
+	@CrossOrigin
+	@ResponseBody
+	@GetMapping("/fetchUsersByPhoneNumberOrEmail/{email}/{phoneNumber}")
+	public Users fetchUsersByPhoneNumberOrEmail(@PathVariable("email") String email,@PathVariable("phoneNumber") String phoneNumber) {
+		if(!email.isEmpty()) {
+			return usersRepository.findByEmail(email);
+		}
+		
+		if(!phoneNumber.isEmpty()) {
+			return usersRepository.findByPhoneNumber(phoneNumber);
+		}
+		return new Users();
+		
+	}
+	@CrossOrigin
+	@ResponseBody
+	@GetMapping("/fetchTenantsDetailsById/{id}")
+	public List<Map<String,String>> fetchTenantsDetailsById(@PathVariable("id") String id) {
+		List<Map<String,String>> responseList= new ArrayList<>();
+		this.usersRepository.findUserDetailsById(Integer.parseInt(id)).forEach(items->{
+			Map<String,String> response= new HashMap<>();
+			response.put("username", (String)items[0]);
+			response.put("email", (String)items[1]);
+			response.put("phone_number", (String)items[2]);
+			response.put("property_id", (String)items[3]);
+			response.put("status", (String)items[4]);
+			response.put("appointment", (String)items[5]);
+			response.put("emp_proof", (String)items[6]);
+			response.put("emp_type", (String)items[7]);
+			response.put("filename", (String)items[8]);
+			responseList.add(response);
+		});
+		return responseList;
+		
+	}
 	@CrossOrigin
 	@PostMapping(path = "/searchProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public List<PropertiesDetails> searchProperties(@RequestBody(required = true) Map<String, String> resp) {
 		return propertiesDetailsService.searchProperties(resp);
+	}
+	@CrossOrigin
+	@PostMapping(path = "/searchUser", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Users searchUser(@RequestBody(required = true) Map<String, String> resp) {
+		return usersService.searchUserByEmailOrUsername(resp.get("type"));
+	}
+	
+	@CrossOrigin
+	@PostMapping(path = "/updatePropertyAvailability", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String,String> updatePropertyAvailability(@RequestBody(required = true) Map<String, String> resp) {
+		return propertiesDetailsService.updatePropertyAvailability(resp);
 	}
 
 	@CrossOrigin
@@ -179,42 +278,65 @@ public class EngineController {
 			@RequestParam String PG_TYPE, @RequestParam String bank_ref_num, @RequestParam String amount,
 			@RequestParam String addedon, @RequestParam String productinfo, @RequestParam String email,
 			@RequestParam String payuMoneyId) {
-		Payments paymentExisting= paymentsRepository.findByTxnId(txnid);
-		if(paymentExisting==null) {
-		String[] trxnArray = txnid.split("_");
-		String username = trxnArray[0];
-		Payments payment = new Payments();
-		payment.setAddedon(addedon);
-		payment.setMihpayid(mihpayid);
-		payment.setStatus(status);
-		payment.setPayuMoneyId("");
-		payment.setTxnid(txnid);
-		payment.setBankcode(bankcode);
-		payment.setPG_TYPE(PG_TYPE);
-		payment.setBank_ref_num(bank_ref_num);
-		payment.setAmount(amount);
-		payment.setProductinfo(productinfo);
-		payment.setEmail(email);
-		payment.setPayuMoneyId(payuMoneyId);
-		payment.setUsername(username);
-		paymentsRepository.save(payment);
+		Payments paymentExisting = paymentsRepository.findByTxnId(txnid);
+		if (paymentExisting == null) {
+			String[] trxnArray = txnid.split("_");
+			String username = trxnArray[0];
+			Payments payment = new Payments();
+			payment.setAddedon(addedon);
+			payment.setMihpayid(mihpayid);
+			payment.setStatus(status);
+			payment.setPayuMoneyId("");
+			payment.setTxnid(txnid);
+			payment.setBankcode(bankcode);
+			payment.setPG_TYPE(PG_TYPE);
+			payment.setBank_ref_num(bank_ref_num);
+			payment.setAmount(amount);
+			payment.setProductinfo(productinfo);
+			payment.setEmail(email);
+			payment.setPayuMoneyId(payuMoneyId);
+			payment.setUsername(username);
+			paymentsRepository.save(payment);
+
 		}
-		if(status.equals("failure")) {
+		Users user = userRepository.findByUsername(username);
+		if (status.equals("failure")) {
+			Map<String, String> request = new HashMap<>();
+			if (user != null) {
+				request.put("to", user.getEmail());
+				request.put("hostName", "ownertenants.com");
+				request.put("type", "paymentFailed");
+				request.put("from", username);
+				request.put("subject", "Payment Failed");
+				request.put("paymentId", payuMoneyId);
+				this.emailServiceImpl.sendSimpleMessage(request);
+			}
 			return "failure";
-		}else {
+		} else {
+			Map<String, String> request = new HashMap<>();
+
+			if (user != null) {
+				request.put("to", user.getEmail());
+				request.put("hostName", "ownertenants.com");
+				request.put("type", "paymentSuccess");
+				request.put("from", username);
+				request.put("subject", "Payment successfully completed");
+				request.put("paymentId", payuMoneyId);
+				this.emailServiceImpl.sendSimpleMessage(request);
+			}
 			return "success";
 		}
-		
+
 	}
 
 	@CrossOrigin
 	@PostMapping(path = "/scheduleAppointment", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> scheduleAppointment(@RequestBody(required = true) Map<String, String> resp) {
-		propertiesDetailsService.scheduleAppointment(resp, cidLocation);
-		Map<String, String> response = new HashMap<>();
-		response.put("status", "true");
-		return response;
+		return propertiesDetailsService.scheduleAppointment(resp, cidLocation);
+//		Map<String, String> response = new HashMap<>();
+//		response.put("status", "true");
+//		return response;
 	}
 
 	@CrossOrigin
@@ -248,16 +370,22 @@ public class EngineController {
 	@CrossOrigin
 	@PostMapping(path = "/fetchreportdatabetween", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public ByteArrayResource fetchreportdatabetween(@RequestBody(required = true) Map<String, Object> resp) {
-		return usersService.fetchreportdatabetween(resp, projectLocation);
+	public Map<String,String> fetchreportdatabetween(@RequestBody(required = true) Map<String, Object> resp) {
+		Map<String,String> response= new HashMap<>();
+		response.put("status", "true");
+		 usersService.fetchreportdatabetween(resp, projectLocation);
+		 return response;
 	}
 
 	@CrossOrigin
 	@PostMapping(path = "/fetchreportdatabetweenpropertyadded", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public ByteArrayResource fetchreportdatabetweenpropertyadded(
+	public Map<String,String>  fetchreportdatabetweenpropertyadded(
 			@RequestBody(required = true) Map<String, Object> resp) {
-		return propertiesDetailsService.fetchreportdatabetweenpropertyadded(resp, projectLocation);
+		Map<String,String> response= new HashMap<>();
+		response.put("status", "true");
+		 propertiesDetailsService.fetchreportdatabetweenpropertyadded(resp, projectLocation);
+		 return response;
 	}
 
 	@CrossOrigin
@@ -285,10 +413,7 @@ public class EngineController {
 	@PostMapping(path = "/addProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> addProperties(@RequestBody(required = true) Map<String, Object> resp) {
-		Map<String, String> response = new HashMap<>();
-		propertiesDetailsService.addProperties(resp, projectLocation);
-		response.put("status", "true");
-		return response;
+		return propertiesDetailsService.addProperties(resp, projectLocation);
 	}
 
 	@CrossOrigin
@@ -313,15 +438,20 @@ public class EngineController {
 	@PostMapping(path = "/registerUser", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> registerUser(@RequestBody(required = true) Map<String, String> resp) {
-		System.out.println(resp);
 		return usersService.registerUser(resp);
 	}
-
+	@CrossOrigin
+	@PostMapping(path = "/validateadminuser", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> validateadminuser(@RequestBody(required = true) Map<String, String> resp) {
+		return adminUserService.validateUser(resp);
+	}
+	
+	
 	@CrossOrigin
 	@PostMapping(path = "/interested", consumes = "application/json", produces = "application/json")
 	@ResponseBody
 	public Map<String, String> interested(@RequestBody(required = true) Map<String, String> resp) {
-		System.out.println(resp);
 		return usersService.interested(resp);
 
 	}

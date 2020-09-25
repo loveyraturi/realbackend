@@ -17,12 +17,25 @@ import javax.transaction.Transactional;
 @Transactional
 public interface UsersRepository extends JpaRepository<Users, Integer> {
 	
+	@Query(value="SELECT * FROM users where type='tenant'", nativeQuery = true)
+	List<Users> findAllTenants();
+	@Query(value="SELECT * FROM users where (email=:type or username=:type) and type='tenant'", nativeQuery = true)
+	Users searchUserByEmailOrUsername(@Param("type") String type);
 	@Query(value="SELECT * FROM users where username=:username and password=:password", nativeQuery = true)
 	Users validateUser(@Param("username") String username,@Param("password") String password);	
 	
 	@Query(value="SELECT * FROM users where username=:username", nativeQuery = true)
 	Users findByUsername(@Param("username") String username);
-
+	@Query(value="SELECT * FROM users where email=:email LIMIT 1", nativeQuery = true)
+	Users findByEmail(@Param("email") String email);
+	@Query(value="SELECT * FROM users where phone_number=:phoneNumber LIMIT 1", nativeQuery = true)
+	Users findByPhoneNumber(@Param("phoneNumber") String phoneNumber);
+	@Query(value="SELECT * FROM users where email=:email and uuid=:uuid", nativeQuery = true)
+	Users findByEmailAndUuid(@Param("email") String email,@Param("uuid") String uuid);
+	
+	@Query(value="SELECT users.username,users.email,users.phone_number,interested.property_id,interested.status,interested.appointment,interested.emp_proof,interested.emp_type,interested.filename FROM users LEFT JOIN interested on users.username=interested.username where users.id=:id", nativeQuery = true)
+	List<Object[]> findUserDetailsById(@Param("id") int id);
+	
 //	@Query(value="SELECT * FROM users where username=:username", nativeQuery = true)
 //	List<Users> findByUsername(@Param("username") String username);	
 //	

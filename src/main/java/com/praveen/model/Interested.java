@@ -26,8 +26,22 @@ public class Interested {
 	String appointment;
 	Date appliedDate;
 	String filename;
+	String empProof;
+	String empType;
 	
 	
+	public String getEmpProof() {
+		return empProof;
+	}
+	public void setEmpProof(String empProof) {
+		this.empProof = empProof;
+	}
+	public String getEmpType() {
+		return empType;
+	}
+	public void setEmpType(String empType) {
+		this.empType = empType;
+	}
 	public String getFilename() {
 		return filename;
 	}

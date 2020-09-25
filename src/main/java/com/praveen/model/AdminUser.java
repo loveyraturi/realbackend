@@ -18,79 +18,27 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "users")
-public class Users {
+@Table(name = "admin_users")
+public class AdminUser {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	private String username;
 	private String password;
-	private String fullName;
-	private String type;
-	private String status;
-	private String online;
-	private String deviceId;
-	private String phoneNumber;
-	private String email;
-	private String uuid;
+	private int level;
 	Date dateCreated;
 	Date DateModified;
 
-	public String getUuid() {
-		return uuid;
+
+	public int getId() {
+		return id;
 	}
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
+	public void setId(int id) {
+		this.id = id;
 	}
 
-	public String getPhoneNumber() {
-		return phoneNumber;
-	}
-
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getStatus() {
-		return status;
-	}
-
-	public String getDeviceId() {
-		return deviceId;
-	}
-
-	public void setDeviceId(String deviceId) {
-		this.deviceId = deviceId;
-	}
-
-	public String getOnline() {
-		return online;
-	}
-
-	public void setOnline(String online) {
-		this.online = online;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
-	// public UserGroup getUserGroup() {
-	// return userGroup;
-	// }
-	// public void setUserGroup(UserGroup userGroup) {
-	// this.userGroup = userGroup;
-	// }
 	public String getUsername() {
 		return username;
 	}
@@ -107,12 +55,12 @@ public class Users {
 		this.password = password;
 	}
 
-	public String getFullName() {
-		return fullName;
+	public int getLevel() {
+		return level;
 	}
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
+	public void setLevel(int level) {
+		this.level = level;
 	}
 
 	public Date getDateCreated() {
@@ -129,22 +77,6 @@ public class Users {
 
 	public void setDateModified(Date dateModified) {
 		DateModified = dateModified;
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	@PrePersist
