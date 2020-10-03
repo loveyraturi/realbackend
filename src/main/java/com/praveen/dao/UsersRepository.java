@@ -21,8 +21,8 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 	List<Users> findAllTenants();
 	@Query(value="SELECT * FROM users where (email=:type or username=:type) and type='tenant'", nativeQuery = true)
 	Users searchUserByEmailOrUsername(@Param("type") String type);
-	@Query(value="SELECT * FROM users where username=:username and password=:password", nativeQuery = true)
-	Users validateUser(@Param("username") String username,@Param("password") String password);	
+	@Query(value="SELECT * FROM users where (email=:email and password=:password) or (phone_number=:email and password=:password) LIMIT 1", nativeQuery = true)
+	Users validateUser(@Param("email") String email,@Param("password") String password);	
 	
 	@Query(value="SELECT * FROM users where username=:username", nativeQuery = true)
 	Users findByUsername(@Param("username") String username);

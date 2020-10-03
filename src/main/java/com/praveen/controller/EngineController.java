@@ -158,17 +158,16 @@ public class EngineController {
 
 	@CrossOrigin
 	@ResponseBody
-	@GetMapping("/sortlistedProperties/{username}")
-	public List<Map<String, Object>> sortlistedProperties(@PathVariable("username") String username) {
-		return propertiesDetailsService.sortlistedProperties(username);
+	@PostMapping(path = "/sortlistedProperties", consumes = "application/json", produces = "application/json")
+	public List<Map<String, Object>> sortlistedProperties(@RequestBody(required = true) Map<String, String> resp) {
+		return propertiesDetailsService.sortlistedProperties(resp.get("email"));
 	}
 
 	@CrossOrigin
 	@ResponseBody
-	@GetMapping("/deleteInterestedProperties/{propertyId}/{username}")
-	public Map<String, String> sortlistedProperties(@PathVariable("propertyId") Integer propertyId,
-			@PathVariable("username") String username) {
-		propertiesDetailsService.deleteInterestedProperties(propertyId, username);
+	@PostMapping(path = "/deleteInterestedProperties", consumes = "application/json", produces = "application/json")
+	public Map<String, String> deleteInterestedProperties(@RequestBody(required = true) Map<String, String> resp) {
+		propertiesDetailsService.deleteInterestedProperties(Integer.parseInt(resp.get("propertyId")), resp.get("email"));
 		Map<String, String> response = new HashMap<>();
 		response.put("status", "true");
 		return response;
@@ -242,6 +241,13 @@ public class EngineController {
 	public List<PropertiesDetails> searchProperties(@RequestBody(required = true) Map<String, String> resp) {
 		return propertiesDetailsService.searchProperties(resp);
 	}
+	@CrossOrigin
+	@PostMapping(path = "/filter", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public List<Map<String, Object>> filter(@RequestBody(required = true) Map<String, String> resp) {
+		return propertiesDetailsService.filter(resp);
+	}
+	
 	@CrossOrigin
 	@PostMapping(path = "/searchUser", consumes = "application/json", produces = "application/json")
 	@ResponseBody
@@ -408,7 +414,13 @@ public class EngineController {
 	public Map<String, String> validateUserName(@RequestBody(required = true) Map<String, String> resp) {
 		return usersService.validateUserName(resp);
 	}
-
+	@CrossOrigin
+	@PostMapping(path = "/validateEmail", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public Map<String, String> validateEmail(@RequestBody(required = true) Map<String, String> resp) {
+		return usersService.validateEmail(resp);
+	}
+	
 	@CrossOrigin
 	@PostMapping(path = "/addProperties", consumes = "application/json", produces = "application/json")
 	@ResponseBody
@@ -419,7 +431,7 @@ public class EngineController {
 	@CrossOrigin
 	@PostMapping(path = "/matchRequirements", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String, String> matchRequirements(@RequestBody(required = true) Map<String, Object> resp) {
+	public Map<String, String> matchRequirements(@RequestBody(required = true) Map<String, String> resp) {
 		Map<String, String> response = new HashMap<>();
 		propertiesDetailsService.matchRequirements(resp);
 		response.put("status", "true");

@@ -23,6 +23,12 @@ public class MvcConfiguration extends WebMvcConfigurerAdapter {
 	String username;
 	@Value("${spring.mail.password}")
 	String password;
+	@Value("${spring.mail.host}")
+	String smtpHost;
+	@Value("${spring.mail.port}")
+	int smtpPort;
+	@Value("${spring.mail.properties.mail.smtp.ssl.enable}")
+	boolean sslEnabled;
 	@Override
 	public void configureViewResolvers(ViewResolverRegistry registry) {
 		InternalResourceViewResolver resolver = new InternalResourceViewResolver();
@@ -35,15 +41,15 @@ public class MvcConfiguration extends WebMvcConfigurerAdapter {
 	@Bean
 	public JavaMailSender getJavaMailSender() {
 		JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-		mailSender.setHost("smtp.gmail.com");
-		mailSender.setPort(465);
+		mailSender.setHost(smtpHost);
+		mailSender.setPort(smtpPort);
 		mailSender.setUsername(username);
 		mailSender.setPassword(password);
 		Properties props = mailSender.getJavaMailProperties();
 		props.put("mail.transport.protocol", "smtp");
 		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.starttls.enable", "true");
-		props.put("mail.smtp.ssl.enable", "true");
+		props.put("mail.smtp.starttls.enable", "none");
+		props.put("mail.smtp.ssl.enable", "none");
 		props.put("mail.session.mail.transport.protocol","smtps");
 		props.put("mail.debug", "true");
 		return mailSender;

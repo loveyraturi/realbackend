@@ -76,6 +76,16 @@ public class UsersService {
 		}
 		return response;
 	}
+	public Map<String, String> validateEmail(Map<String, String> request) {
+		Map<String, String> response = new HashMap<>();
+		if (userRepository.findByEmail(request.get("email")) != null) {
+			response.put("status", "true");
+		} else {
+			response.put("status", "false");
+		}
+		return response;
+	}
+	
 	public Map<String, String> resetPassword(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
 		Users user=userRepository.findByEmailAndUuid(request.get("email"),request.get("uuid"));
@@ -94,16 +104,16 @@ public class UsersService {
 	public Map<String, String> validateUser(Map<String, String> request) {
 		Map<String, String> response = new HashMap<>();
 
-		if (userRepository.validateUser(request.get("username"), request.get("password")) == null) {
+		if (userRepository.validateUser(request.get("email"), request.get("password")) == null) {
 			response.put("status", "false");
-			response.put("message", "Invalid Username or password");
+			response.put("message", "Invalid email or password");
 		} else {
-			Users user = userRepository.validateUser(request.get("username"), request.get("password"));
+			Users user = userRepository.validateUser(request.get("email"), request.get("password"));
 			if (user.getId() > 0) {
 				// if (user.getOnline() == null) {
 				user.setOnline("1");
 				response.put("status", "true");
-				response.put("type", user.getType());
+				response.put("name", user.getFullName());
 				response.put("message", "Successfully logged in");
 				userRepository.save(user);
 				// } else if ("0".equals(user.getOnline()) || user.getOnline().isEmpty()) {
@@ -133,36 +143,36 @@ public class UsersService {
 		if (request.get("password") == null) {
 			response.put("status", "false");
 			response.put("message", "Please Enter Password");
-
-		} else if (request.get("type") == null) {
-			response.put("status", "false");
-			response.put("message", "Please Enter User Type");
-
-		} else if (request.get("username") == null) {
-			response.put("status", "false");
-			response.put("message", "Please Enter Username");
+			return response;
 
 		} else if (request.get("phoneNumber") == null) {
 			response.put("status", "false");
 			response.put("message", "Please Enter Phonenumber");
+			return response;
 
 		} else if (request.get("email") == null) {
 			response.put("status", "false");
 			response.put("message", "Please Enter Email");
+			return response;
 
 		} else {
-			response.put("status", "true");
-			response.put("message", "Successfully Registered");
-			Users users = new Users();
-			users.setDeviceId(request.get("deviceId"));
-			users.setFullName(request.get("fullName"));
-			users.setPassword(request.get("password"));
-			users.setStatus(request.get("status"));
-			users.setType(request.get("type"));
-			users.setUsername(request.get("username"));
-			users.setPhoneNumber(request.get("phoneNumber"));
-			users.setEmail(request.get("email"));
-			userRepository.save(users);
+			if(userRepository.findByEmail(request.get("email"))==null && userRepository.findByPhoneNumber(request.get("phoneNumber"))==null) {
+				response.put("status", "true");
+				response.put("message", "Successfully Registered");
+				Users users = new Users();
+				users.setDeviceId(request.get("deviceId"));
+				users.setFullName(request.get("name"));
+				users.setPassword(request.get("password"));
+				users.setStatus(request.get("status"));
+				users.setPhoneNumber(request.get("phoneNumber"));
+				users.setEmail(request.get("email"));
+				userRepository.save(users);
+			}else {
+				response.put("status", "false");
+				response.put("message", "Email/Phone number already in use");
+				return response;
+			}
+			
 		}
 		return response;
 
@@ -170,19 +180,19 @@ public class UsersService {
 
 	public Map<String, String> interested(Map<String, String> request) {
 		Date appliedDate = new Timestamp((new Date()).getTime());
-		String username = request.get("username");
+		String email = request.get("email");
 		System.out.println(appliedDate);
 		System.out.println(request.get("property_id"));
-		Interested alreadyAvailable = interestedRepository.findByUsernameAndPropety(username,
+		Interested alreadyAvailable = interestedRepository.findByEmailAndPropety(email,
 				request.get("property_id"));
 		// System.out.println(alreadyAvailable.getId());
-		Users user = userRepository.findByUsername(username);
+		Users user = userRepository.findByEmail(email);
 		Map<String, String> response = new HashMap<>();
 		// Interested interestedResponse=null;
 		if (alreadyAvailable == null) {
 			Interested interested = new Interested();
 			interested.setFullName(user.getFullName());
-			interested.setUsername(user.getUsername());
+			interested.setEmail(user.getEmail());
 			interested.setAppliedDate(appliedDate);
 			interested.setEmail(user.getEmail());
 			interested.setPhoneNumber(user.getPhoneNumber());
@@ -234,7 +244,7 @@ public class UsersService {
 			Cell header1 = rowHeader.createCell(cellnumHeader++);
 			header1.setCellValue("fullName");
 			Cell header2 = rowHeader.createCell(cellnumHeader++);
-			header2.setCellValue("username");
+			header2.setCellValue("email");
 			Cell header3 = rowHeader.createCell(cellnumHeader++);
 			header3.setCellValue("propertyId");
 			Cell header4 = rowHeader.createCell(cellnumHeader++);
@@ -258,7 +268,7 @@ public class UsersService {
 				Cell cell1 = row.createCell(cellnum++);
 				cell1.setCellValue(lead.getFullName());
 				Cell cell2 = row.createCell(cellnum++);
-				cell2.setCellValue(lead.getUsername());
+				cell2.setCellValue(lead.getEmail());
 				Cell cell3 = row.createCell(cellnum++);
 				cell3.setCellValue(lead.getPropertyId());
 				Cell cell4 = row.createCell(cellnum++);

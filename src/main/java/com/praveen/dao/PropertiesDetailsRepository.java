@@ -1,6 +1,7 @@
 package com.praveen.dao;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,21 +21,28 @@ import com.praveen.model.Users;
 @Repository
 @Transactional
 public interface PropertiesDetailsRepository extends JpaRepository<PropertiesDetails, Integer> {
-//	@Query(value="SELECT id, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details HAVING distance < 30 ORDER BY distance LIMIT 0 , 20;", nativeQuery = true)
+
+	@Query(value="SELECT * from properties_details where (:propertyType is null or property_type=:propertyType) and (:furnishType is null or furnish=:furnishType) and (price between :minPrice and :maxPrice) and (price between :minPrice and :maxPrice) and (area between :minArea and :maxArea) and (:propertyBHK is null or name IN(:propertyBHK)) and (:address is null or city LIKE :address or locality LIKE :address or address LIKE :address) LIMIT 0 , 20", nativeQuery = true)
+	List<PropertiesDetails> findFilter(@Param("furnishType")String furnishType,@Param("maxArea") int maxArea,@Param("minArea") int minArea,@Param("maxPrice") int maxPrice,@Param("minPrice") int minPrice, @Param("propertyBHK") List<String>  propertyBHK,@Param("propertyType") String propertyType,@Param("address") String address);
+	@Query(value="SELECT * from properties_details where (:propertyType is null or property_type=:propertyType) and (:furnishType is null or furnish=:furnishType) and (price between :minPrice and :maxPrice) and (price between :minPrice and :maxPrice) and (area between :minArea and :maxArea) and (:propertyBHK is null or name IN(:propertyBHK)) and (:preference is null or allowed LIKE :preference) and (:address is null or city LIKE :address or locality LIKE :address or address LIKE :address) LIMIT 0 , 20", nativeQuery = true)
+	List<PropertiesDetails> findFilterWithPreference(@Param("furnishType")String furnishType,@Param("maxArea") int maxArea,@Param("minArea") int minArea,@Param("maxPrice") int maxPrice,@Param("minPrice") int minPrice, @Param("preference") String preference, @Param("propertyBHK") List<String>  propertyBHK,@Param("propertyType") String propertyType,@Param("address") String address);
+	
+	
+	//	@Query(value="SELECT id, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details HAVING distance < 30 ORDER BY distance LIMIT 0 , 20;", nativeQuery = true)
 //	 List<PropertiesDetails> findPropertiesNearMe(@Param("latitude") String latitude,@Param("longitude") String longitude);
-	@Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details and is_approved=1 and isavailable=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	@Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details and is_approved=1 and isavailable=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> findPropertiesNearMe(@Param("latitude") String latitude,@Param("longitude") String longitude);
 	 
 	 //PROPERTY BY TYPE
-	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details where property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details where property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> getNearByPropertyByType(@Param("latitude") String latitude,@Param("longitude") String longitude,@Param("property_type") String property_type);
 	 
 	 //PROPERTY BY TYPE AND RANGE
-	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price > :priceRange and property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price > :priceRange and property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> getNearByPropertyByGreaterRangeAndType(@Param("latitude") String latitude,@Param("longitude") String longitude,@Param("priceRange") String priceRange,@Param("property_type") String property_type);
-	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price < :priceRange and property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price < :priceRange and property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> getNearByPropertyByLessRangeAndType(@Param("latitude") String latitude,@Param("longitude") String longitude,@Param("priceRange") String priceRange,@Param("property_type") String property_type);
-	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price between :priceRange and :priceRange2 and property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price between :priceRange and :priceRange2 and property_type=:property_type and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> mainPropertiesRangePriceAndType(@Param("latitude") String latitude,@Param("longitude") String longitude,@Param("priceRange") String priceRange,@Param("priceRange2") String priceRange2,@Param("property_type") String property_type);
 	 
 	 //PROPERTY BY ADDRESS AND RANGE
@@ -69,11 +77,11 @@ public interface PropertiesDetailsRepository extends JpaRepository<PropertiesDet
 	 
 	 //PROPERTYBYRANGE
 	 
-	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price > :priceRange and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price > :priceRange and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> mainPropertiesGreaterPriceOnly(@Param("latitude") String latitude,@Param("longitude") String longitude,@Param("priceRange") String priceRange);
-	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price < :priceRange and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price < :priceRange and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> mainPropertiesLessPriceOnly(@Param("latitude") String latitude,@Param("longitude") String longitude,@Param("priceRange") String priceRange);
-	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_name,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price between :priceRange and :priceRange2 and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
+	 @Query(value="SELECT id,name,address,bedroom,washroom,garage,description,area,owner_email,isavailable,phone_number,front_image,latitude,longitude,date_created,date_modified,price,parking,locality, (3959 * acos (cos ( radians(:latitude) )* cos( radians( latitude ) )* cos( radians( longitude ) - radians(:longitude) ) + sin ( radians(:latitude) ) * sin( radians( latitude ) ) )) AS distance FROM properties_details WHERE price between :priceRange and :priceRange2 and isavailable=1 and is_approved=1 HAVING distance < 30 ORDER BY distance LIMIT 0 , 20", nativeQuery = true)
 	 List<Object[]> mainPropertiesRangePriceOnly(@Param("latitude") String latitude,@Param("longitude") String longitude,@Param("priceRange") String priceRange,@Param("priceRange2") String priceRange2);
 	
 	 //BY ADDRESS
@@ -85,8 +93,8 @@ public interface PropertiesDetailsRepository extends JpaRepository<PropertiesDet
 	 
 	 @Query(value="select * from properties_details where  date_created >= :fromDate and date_created <= :toDate ", nativeQuery = true)
 	 List<PropertiesDetails> fetchreportdatabetweenpropertyadded( @Param("fromDate") Timestamp fromDate,@Param("toDate") Timestamp toDate);
-	 @Query(value="select * from properties_details where  owner_name=:ownerName", nativeQuery = true)
-	 List<PropertiesDetails> findByOwnerName( @Param("ownerName") String ownerName);
+	 @Query(value="select * from properties_details where  owner_email=:email", nativeQuery = true)
+	 List<PropertiesDetails> findByEmail( @Param("email") String email);
 	
 	 //	@Query(value="select group_campaing_mapping.campaingname from group_campaing_mapping INNER JOIN users as table1 ON table1.usergroup = group_campaing_mapping.groupname where table1.username=:username", nativeQuery = true)
 //	 List<String> findCampaingByUserName(@Param("username") String username);
@@ -95,6 +103,6 @@ public interface PropertiesDetailsRepository extends JpaRepository<PropertiesDet
 //	@Query(value="select * from campaing  where active='Y' ", nativeQuery = true)
 //	List<Campaing> findActiveCampaing();	
 	
-	 @Query(value="select  properties_details.* from  properties_details INNER JOIN interested ON properties_details.id=interested.property_id where interested.username=:username", nativeQuery = true)
-	 List<PropertiesDetails> fetchInterestedPropertyByUsername(@Param("username") String username);
+	 @Query(value="select  properties_details.* from  properties_details INNER JOIN interested ON properties_details.id=interested.property_id where interested.email=:email", nativeQuery = true)
+	 List<PropertiesDetails> fetchInterestedPropertyByEmail(@Param("email") String email);
 }

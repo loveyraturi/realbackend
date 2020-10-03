@@ -25,7 +25,7 @@ public class PropertiesDetails {
 	String garage;
 	String description;
 	int area;
-	String ownerName;
+	String ownerEmail;
 	int isavailable;
 	String phoneNumber;
 	int price;
@@ -49,6 +49,15 @@ public class PropertiesDetails {
 	Date DateModified;
 	String amenities;
 	
+	
+	public String getOwnerEmail() {
+		return ownerEmail;
+	}
+
+	public void setOwnerEmail(String ownerEmail) {
+		this.ownerEmail = ownerEmail;
+	}
+
 	public String getAmenities() {
 		return amenities;
 	}
@@ -223,14 +232,6 @@ public class PropertiesDetails {
 
 	public void setDescription(String description) {
 		this.description = description;
-	}
-
-	public String getOwnerName() {
-		return ownerName;
-	}
-
-	public void setOwnerName(String ownerName) {
-		this.ownerName = ownerName;
 	}
 
 	public int getIsavailable() {

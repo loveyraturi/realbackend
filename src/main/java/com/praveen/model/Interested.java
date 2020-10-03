@@ -18,7 +18,6 @@ public class Interested {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	int id;
 	String fullName;
-	String username;
 	String propertyId;
 	String phoneNumber;
 	String email;
@@ -65,12 +64,6 @@ public class Interested {
 	}
 	public void setId(int id) {
 		this.id = id;
-	}
-	public String getUsername() {
-		return username;
-	}
-	public void setUsername(String username) {
-		this.username = username;
 	}
 	public String getPropertyId() {
 		return propertyId;

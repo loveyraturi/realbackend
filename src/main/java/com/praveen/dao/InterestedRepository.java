@@ -23,10 +23,12 @@ public interface InterestedRepository extends JpaRepository<Interested, Integer>
 	 List<Interested> fetchreportdatabetween( @Param("fromDate") Timestamp fromDate,@Param("toDate") Timestamp toDate);
 	 @Query(value="select * from interested where  applied_date >= :fromDate and applied_date <= :toDate and phone_number=:phone_number ", nativeQuery = true)
 	 List<Interested> fetchReportDataBetweenbyPhoneNumber(@Param("phone_number") String phone_number, @Param("fromDate") Timestamp fromDate,@Param("toDate") Timestamp toDate);
-	 @Query(value="SELECT * FROM interested where username=:username and property_id=:propertyId", nativeQuery = true)
-	 Interested findByUsernameAndPropety(@Param("username") String username,@Param("propertyId") String propertyId);
+	 @Query(value="SELECT * FROM interested where email=:email and property_id=:propertyId", nativeQuery = true)
+	 Interested findByEmailAndPropety(@Param("email") String email,@Param("propertyId") String propertyId);
+	 @Query(value="SELECT property_id FROM interested where email=:email", nativeQuery = true)
+	 List<String> findByEmail(@Param("email") String email);
 	 @Modifying
-	 @Query(value="delete from interested where username=:username and property_id=:property_id", nativeQuery = true)
-	 void deleteInterestedProperties(@Param("property_id") Integer propertyId,@Param("username") String username);
+	 @Query(value="delete from interested where email=:email and property_id=:property_id", nativeQuery = true)
+	 void deleteInterestedProperties(@Param("property_id") Integer propertyId,@Param("email") String email);
 	 
 }

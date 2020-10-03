@@ -18,7 +18,7 @@ import com.praveen.model.MatchingRequirements;
 @Repository
 @Transactional
 public interface MatchingRequirementsRepository extends JpaRepository<MatchingRequirements, Integer> {
-	 @Query(value="SELECT * FROM matching_requirements where username=:username", nativeQuery = true)
-	 MatchingRequirements findByUsername(@Param("username") String username);
+	 @Query(value="SELECT * FROM matching_requirements where email=:email", nativeQuery = true)
+	 MatchingRequirements findByEmail(@Param("email") String email);
 	
 }

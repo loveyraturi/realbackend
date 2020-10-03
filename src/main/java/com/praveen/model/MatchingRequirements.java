@@ -18,118 +18,113 @@ public class MatchingRequirements {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	int id;
 	String bhk;
-	String username;
-	String bedroom;
-	String washroom;
-	int area;
+	String email;
+	String areaRange;
 	String furnish;
 	String propertyType;
-    String parking;
-    String modular;
-	int price;
+	String priceRange;
 	String locality;
+	String preference;
 	String city;
 	String state;
-	String country;
 	Date submittedDate;
 	
-	public String getUsername() {
-		return username;
+	public String getPreference() {
+		return preference;
 	}
-	public void setUsername(String username) {
-		this.username = username;
+
+	public void setPreference(String preference) {
+		this.preference = preference;
 	}
+
 	public int getId() {
 		return id;
 	}
+
 	public void setId(int id) {
 		this.id = id;
 	}
+
 	public String getBhk() {
 		return bhk;
 	}
+
 	public void setBhk(String bhk) {
 		this.bhk = bhk;
 	}
-	public String getBedroom() {
-		return bedroom;
+
+	public String getEmail() {
+		return email;
 	}
-	public void setBedroom(String bedroom) {
-		this.bedroom = bedroom;
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
-	public String getWashroom() {
-		return washroom;
+
+	public String getAreaRange() {
+		return areaRange;
 	}
-	public void setWashroom(String washroom) {
-		this.washroom = washroom;
+
+	public void setAreaRange(String areaRange) {
+		this.areaRange = areaRange;
 	}
-	public int getArea() {
-		return area;
-	}
-	public void setArea(int area) {
-		this.area = area;
-	}
-	public int getPrice() {
-		return price;
-	}
-	public void setPrice(int price) {
-		this.price = price;
-	}
-	public String getLocality() {
-		return locality;
-	}
-	public void setLocality(String locality) {
-		this.locality = locality;
-	}
-	public String getCity() {
-		return city;
-	}
-	public void setCity(String city) {
-		this.city = city;
-	}
+
 	public String getFurnish() {
 		return furnish;
 	}
+
 	public void setFurnish(String furnish) {
 		this.furnish = furnish;
 	}
-	public String getState() {
-		return state;
-	}
-	public void setState(String state) {
-		this.state = state;
-	}
-	public String getCountry() {
-		return country;
-	}
-	public void setCountry(String country) {
-		this.country = country;
-	}
+
 	public String getPropertyType() {
 		return propertyType;
 	}
+
 	public void setPropertyType(String propertyType) {
 		this.propertyType = propertyType;
 	}
-	public String getParking() {
-		return parking;
+
+	public String getPriceRange() {
+		return priceRange;
 	}
-	public void setParking(String parking) {
-		this.parking = parking;
+
+	public void setPriceRange(String priceRange) {
+		this.priceRange = priceRange;
 	}
-	public String getModular() {
-		return modular;
+
+	public String getLocality() {
+		return locality;
 	}
-	public void setModular(String modular) {
-		this.modular = modular;
+
+	public void setLocality(String locality) {
+		this.locality = locality;
 	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
 	public Date getSubmittedDate() {
 		return submittedDate;
 	}
+
 	public void setSubmittedDate(Date submittedDate) {
 		this.submittedDate = submittedDate;
 	}
-	
+
 	@PrePersist
 	void onCreate() {
 		this.setSubmittedDate(new Timestamp((new Date()).getTime()));
