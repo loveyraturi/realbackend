@@ -48,9 +48,9 @@ public class MvcConfiguration extends WebMvcConfigurerAdapter {
 		Properties props = mailSender.getJavaMailProperties();
 		props.put("mail.transport.protocol", "smtp");
 		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.starttls.enable", "none");
-		props.put("mail.smtp.ssl.enable", "none");
-		props.put("mail.session.mail.transport.protocol","smtps");
+//		props.put("mail.smtp.starttls.enable", "");
+//		props.put("mail.smtp.ssl.enable", "none");
+//		props.put("mail.session.mail.transport.protocol","smtps");
 		props.put("mail.debug", "true");
 		return mailSender;
 	}

@@ -25,7 +25,22 @@ public class Payments {
 	String email;
 	String payuMoneyId;
 	String username;
+	String paymentPlan;
+	String paymentType;
 	
+	
+	public String getPaymentPlan() {
+		return paymentPlan;
+	}
+	public void setPaymentPlan(String paymentPlan) {
+		this.paymentPlan = paymentPlan;
+	}
+	public String getPaymentType() {
+		return paymentType;
+	}
+	public void setPaymentType(String paymentType) {
+		this.paymentType = paymentType;
+	}
 	public String getUsername() {
 		return username;
 	}

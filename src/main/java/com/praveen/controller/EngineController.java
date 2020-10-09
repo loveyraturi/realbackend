@@ -39,6 +39,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.praveen.model.Interested;
+import com.praveen.model.MatchingRequirements;
 import com.praveen.model.Payments;
 import com.praveen.model.PropertiesDetails;
 import com.praveen.model.Users;
@@ -279,15 +281,16 @@ public class EngineController {
 	// return propertiesDetailsService.afterPayment(resp);
 	// }
 	@RequestMapping(path = "/afterPayment", method = RequestMethod.POST)
-	public String afterPayment(@RequestParam String mihpayid, @RequestParam String status,
-			@RequestParam PaymentMode mode, @RequestParam String txnid, @RequestParam String bankcode,
+	public String afterPayment(@RequestParam String mihpayid, @RequestParam String status, @RequestParam String txnid, @RequestParam String bankcode,
 			@RequestParam String PG_TYPE, @RequestParam String bank_ref_num, @RequestParam String amount,
-			@RequestParam String addedon, @RequestParam String productinfo, @RequestParam String email,
-			@RequestParam String payuMoneyId) {
+			@RequestParam String addedon, @RequestParam String productinfo,@RequestParam String payuMoneyId) {
+		String[] trxnArray = txnid.split("_");
+		String email = trxnArray[0];
+		String paymentPlan = trxnArray[1];
+		String paymentType = trxnArray[2];
+		
 		Payments paymentExisting = paymentsRepository.findByTxnId(txnid);
 		if (paymentExisting == null) {
-			String[] trxnArray = txnid.split("_");
-			String username = trxnArray[0];
 			Payments payment = new Payments();
 			payment.setAddedon(addedon);
 			payment.setMihpayid(mihpayid);
@@ -301,18 +304,19 @@ public class EngineController {
 			payment.setProductinfo(productinfo);
 			payment.setEmail(email);
 			payment.setPayuMoneyId(payuMoneyId);
-			payment.setUsername(username);
+			payment.setPaymentPlan(paymentPlan);
+			payment.setPaymentType(paymentType);
 			paymentsRepository.save(payment);
 
 		}
-		Users user = userRepository.findByUsername(username);
+		Users user = userRepository.findByEmail(email);
 		if (status.equals("failure")) {
 			Map<String, String> request = new HashMap<>();
 			if (user != null) {
 				request.put("to", user.getEmail());
 				request.put("hostName", "ownertenants.com");
 				request.put("type", "paymentFailed");
-				request.put("from", username);
+				request.put("from", "support@ownertenants.com");
 				request.put("subject", "Payment Failed");
 				request.put("paymentId", payuMoneyId);
 				this.emailServiceImpl.sendSimpleMessage(request);
@@ -325,9 +329,12 @@ public class EngineController {
 				request.put("to", user.getEmail());
 				request.put("hostName", "ownertenants.com");
 				request.put("type", "paymentSuccess");
-				request.put("from", username);
+				request.put("from", "support@ownertenants.com");
 				request.put("subject", "Payment successfully completed");
 				request.put("paymentId", payuMoneyId);
+				request.put("paymentPlan", paymentPlan);
+				request.put("paymentType", paymentType);
+				request.put("amount", amount);
 				this.emailServiceImpl.sendSimpleMessage(request);
 			}
 			return "success";
@@ -376,22 +383,26 @@ public class EngineController {
 	@CrossOrigin
 	@PostMapping(path = "/fetchreportdatabetween", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String,String> fetchreportdatabetween(@RequestBody(required = true) Map<String, Object> resp) {
+	public List<Interested> fetchreportdatabetween(@RequestBody(required = true) Map<String, Object> resp) {
 		Map<String,String> response= new HashMap<>();
 		response.put("status", "true");
-		 usersService.fetchreportdatabetween(resp, projectLocation);
-		 return response;
+		return usersService.fetchreportdatabetween(resp, projectLocation);
 	}
 
 	@CrossOrigin
 	@PostMapping(path = "/fetchreportdatabetweenpropertyadded", consumes = "application/json", produces = "application/json")
 	@ResponseBody
-	public Map<String,String>  fetchreportdatabetweenpropertyadded(
+	public List<PropertiesDetails>  fetchreportdatabetweenpropertyadded(
 			@RequestBody(required = true) Map<String, Object> resp) {
-		Map<String,String> response= new HashMap<>();
-		response.put("status", "true");
-		 propertiesDetailsService.fetchreportdatabetweenpropertyadded(resp, projectLocation);
-		 return response;
+
+		 return propertiesDetailsService.fetchreportdatabetweenpropertyadded(resp, projectLocation);
+	}
+	@CrossOrigin
+	@PostMapping(path = "/fetchreportdatabetweenmatchingProperties", consumes = "application/json", produces = "application/json")
+	@ResponseBody
+	public List<MatchingRequirements>  fetchreportdatabetweenmatchingProperties(
+			@RequestBody(required = true) Map<String, Object> resp) {
+		 return propertiesDetailsService.fetchreportdatabetweenmatchingProperties(resp, projectLocation);
 	}
 
 	@CrossOrigin

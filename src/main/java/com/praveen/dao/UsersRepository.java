@@ -17,9 +17,9 @@ import javax.transaction.Transactional;
 @Transactional
 public interface UsersRepository extends JpaRepository<Users, Integer> {
 	
-	@Query(value="SELECT * FROM users where type='tenant'", nativeQuery = true)
+	@Query(value="SELECT * FROM users", nativeQuery = true)
 	List<Users> findAllTenants();
-	@Query(value="SELECT * FROM users where (email=:type or username=:type) and type='tenant'", nativeQuery = true)
+	@Query(value="SELECT * FROM users where (email=:type or username=:type)", nativeQuery = true)
 	Users searchUserByEmailOrUsername(@Param("type") String type);
 	@Query(value="SELECT * FROM users where (email=:email and password=:password) or (phone_number=:email and password=:password) LIMIT 1", nativeQuery = true)
 	Users validateUser(@Param("email") String email,@Param("password") String password);	

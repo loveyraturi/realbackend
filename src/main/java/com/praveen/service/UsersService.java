@@ -210,7 +210,7 @@ public class UsersService {
 		return response;
 	}
 
-	public ByteArrayResource fetchreportdatabetween(Map<String, Object> request, String reportingLocation) {
+	public List<Interested> fetchreportdatabetween(Map<String, Object> request, String reportingLocation) {
 		String phoneNumber = (String) request.get("phone_number");
 		String dateTo = String.valueOf(request.get("dateto"));
 		String dateFrom = String.valueOf(request.get("datefrom"));
@@ -303,7 +303,7 @@ public class UsersService {
 			HttpHeaders header = new HttpHeaders();
 			header.setContentType(new MediaType("application", "force-download"));
 			header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ProductTemplate.xlsx");
-			return new ByteArrayResource(bytes);
+			return resultLeads;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
