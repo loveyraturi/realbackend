@@ -125,6 +125,4 @@ public class Payments {
 	public void setPayuMoneyId(String payuMoneyId) {
 		this.payuMoneyId = payuMoneyId;
 	}
-	
-	
 }

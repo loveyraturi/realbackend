@@ -33,7 +33,7 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 	@Query(value="SELECT * FROM users where email=:email and uuid=:uuid", nativeQuery = true)
 	Users findByEmailAndUuid(@Param("email") String email,@Param("uuid") String uuid);
 	
-	@Query(value="SELECT users.email,users.phone_number,interested.property_id,interested.status,interested.appointment,interested.emp_proof,interested.emp_type,interested.filename FROM users LEFT JOIN interested on users.email=interested.email where users.id=:id", nativeQuery = true)
+	@Query(value="SELECT users.username,users.email,users.phone_number,interested.property_id,interested.status,interested.appointment,interested.emp_proof,interested.emp_type,interested.filename FROM users LEFT JOIN interested on users.username=interested.username where users.id=:id", nativeQuery = true)
 	List<Object[]> findUserDetailsById(@Param("id") int id);
 	
 //	@Query(value="SELECT * FROM users where username=:username", nativeQuery = true)

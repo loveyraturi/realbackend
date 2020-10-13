@@ -23,6 +23,4 @@ public interface MatchingRequirementsRepository extends JpaRepository<MatchingRe
 	 MatchingRequirements findByEmail(@Param("email") String email);
 	 @Query(value="select * from matching_requirements where  submitted_date >= :fromDate and submitted_date <= :toDate ", nativeQuery = true)
 	 List<MatchingRequirements> fetchreportdatabetweenmatchingProperties( @Param("fromDate") Timestamp fromDate,@Param("toDate") Timestamp toDate);
-	 
-	
 }

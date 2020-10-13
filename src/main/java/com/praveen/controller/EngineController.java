@@ -223,14 +223,15 @@ public class EngineController {
 		List<Map<String,String>> responseList= new ArrayList<>();
 		this.usersRepository.findUserDetailsById(Integer.parseInt(id)).forEach(items->{
 			Map<String,String> response= new HashMap<>();
-			response.put("email", (String)items[0]);
-			response.put("phone_number", (String)items[1]);
-			response.put("property_id", (String)items[2]);
-			response.put("status", (String)items[3]);
-			response.put("appointment", (String)items[4]);
-			response.put("emp_proof", (String)items[5]);
-			response.put("emp_type", (String)items[6]);
-			response.put("filename", (String)items[7]);
+			response.put("username", (String)items[0]);
+			response.put("email", (String)items[1]);
+			response.put("phone_number", (String)items[2]);
+			response.put("property_id", (String)items[3]);
+			response.put("status", (String)items[4]);
+			response.put("appointment", (String)items[5]);
+			response.put("emp_proof", (String)items[6]);
+			response.put("emp_type", (String)items[7]);
+			response.put("filename", (String)items[8]);
 			responseList.add(response);
 		});
 		return responseList;
@@ -447,7 +448,6 @@ public class EngineController {
 		response.put("status", "true");
 		return response;
 	}
-
 	@CrossOrigin
 	@PostMapping(path = "/findPropertiesNearMe", consumes = "application/json", produces = "application/json")
 	@ResponseBody
@@ -455,7 +455,6 @@ public class EngineController {
 		return propertiesDetailsService.findPropertiesNearMe(resp);
 
 	}
-
 	@CrossOrigin
 	@PostMapping(path = "/registerUser", consumes = "application/json", produces = "application/json")
 	@ResponseBody
@@ -468,8 +467,6 @@ public class EngineController {
 	public Map<String, String> validateadminuser(@RequestBody(required = true) Map<String, String> resp) {
 		return adminUserService.validateUser(resp);
 	}
-	
-	
 	@CrossOrigin
 	@PostMapping(path = "/interested", consumes = "application/json", produces = "application/json")
 	@ResponseBody

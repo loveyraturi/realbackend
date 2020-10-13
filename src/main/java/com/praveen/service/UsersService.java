@@ -111,10 +111,8 @@ public class UsersService {
 			if (user.getId() > 0) {
 				// if (user.getOnline() == null) {
 				user.setOnline("1");
-				response.put("status", "true"); 
+				response.put("status", "true");
 				response.put("name", user.getFullName());
-				response.put("email", user.getEmail());
-				response.put("phone_number", user.getPhoneNumber());
 				response.put("message", "Successfully logged in");
 				userRepository.save(user);
 				// } else if ("0".equals(user.getOnline()) || user.getOnline().isEmpty()) {

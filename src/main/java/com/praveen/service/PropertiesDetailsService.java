@@ -834,7 +834,7 @@ public class PropertiesDetailsService {
 
 	public void updateImages(Map<String, Object> request, String projectLocation) {
 		List<Map<String, String>> images = (List<Map<String, String>>) request.get("images");
-		String ownerEmail = (String) request.get("email");
+		String ownerEmail = (String) request.get("ownerEmail");
 		String propertyId = (String) request.get("propertyId");
 		List<Images> imageList = imagesRepository
 				.getImageByPropertyId(Integer.parseInt((String) request.get("propertyId")));
@@ -848,7 +848,6 @@ public class PropertiesDetailsService {
 			}
 		});
 		Users userDetails=usersRepository.findByEmail(ownerEmail);
-		System.out.println(userDetails);
 		List<Images> imgList = new ArrayList<>();
 		images.forEach(item -> {
 			Images img = new Images();
@@ -1630,5 +1629,4 @@ public class PropertiesDetailsService {
 		// });
 		return prop;
 	}
-
 }
