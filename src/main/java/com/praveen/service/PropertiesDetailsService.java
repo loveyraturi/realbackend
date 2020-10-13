@@ -186,8 +186,111 @@ public class PropertiesDetailsService {
 		});
 		return searchDetails;
 	}
+	
+	public List<MatchingRequirements> fetchreportdatabetweenmatchingProperties(Map<String, Object> request,
+			String reportingLocation) {
+		String phoneNumber = (String) request.get("phone_number");
+		String dateTo = String.valueOf(request.get("dateto"));
+		String dateFrom = String.valueOf(request.get("datefrom"));
+		Timestamp dateToTimestamp = null;
+		Timestamp dateFromTimestamp = null;
+		try {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+			Date dateToDate = dateFormat.parse(dateTo);
+			Date dateFromDate = dateFormat.parse(dateFrom);
+			dateToTimestamp = new java.sql.Timestamp(dateToDate.getTime());
+			dateFromTimestamp = new java.sql.Timestamp(dateFromDate.getTime());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println(dateToTimestamp);
+		System.out.println(dateFromTimestamp);
+		List<MatchingRequirements> resultLeads = new ArrayList<>();
+		resultLeads.addAll(
+				matchingRequirementsRepository.fetchreportdatabetweenmatchingProperties(dateFromTimestamp, dateToTimestamp));
 
-	public ByteArrayResource fetchreportdatabetweenpropertyadded(Map<String, Object> request,
+		try {
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			XSSFWorkbook workbook = new XSSFWorkbook();
+			XSSFSheet sheet = workbook.createSheet("MatchingRequirements");
+			int rownum = 0;
+			int cellnumHeader = 0;
+			Row rowHeader = sheet.createRow(rownum++);
+			Cell header1 = rowHeader.createCell(cellnumHeader++);
+			header1.setCellValue("BHK TYPE");
+			Cell header2 = rowHeader.createCell(cellnumHeader++);
+			header2.setCellValue("Email");
+			Cell header3 = rowHeader.createCell(cellnumHeader++);
+			header3.setCellValue("Buildup area");
+			Cell header4 = rowHeader.createCell(cellnumHeader++);
+			header4.setCellValue("Furnish Type");
+			Cell header5 = rowHeader.createCell(cellnumHeader++);
+			header5.setCellValue("Property Type");
+			Cell header6 = rowHeader.createCell(cellnumHeader++);
+			header6.setCellValue("Price Range");
+			Cell header7 = rowHeader.createCell(cellnumHeader++);
+			header7.setCellValue("locality");
+			Cell header8 = rowHeader.createCell(cellnumHeader++);
+			header8.setCellValue("city");
+			Cell header9 = rowHeader.createCell(cellnumHeader++);
+			header9.setCellValue("state");
+			Cell header10 = rowHeader.createCell(cellnumHeader++);
+			header10.setCellValue("Preference");
+			CreationHelper createHelper = workbook.getCreationHelper();
+			for (MatchingRequirements properties : resultLeads) {
+				// System.out.println(properties.getFullName());
+				// this creates a new row in the sheet
+				Row row = sheet.createRow(rownum++);
+				int cellnum = 0;
+				Cell cell1 = row.createCell(cellnum++);
+				cell1.setCellValue(properties.getBhk());
+				Cell cell2 = row.createCell(cellnum++);
+				cell2.setCellValue(properties.getEmail());
+				Cell cell3 = row.createCell(cellnum++);
+				cell3.setCellValue(properties.getAreaRange());
+				Cell cell4 = row.createCell(cellnum++);
+				cell4.setCellValue(properties.getFurnish());
+				Cell cell5 = row.createCell(cellnum++);
+				cell5.setCellValue(properties.getPropertyType());
+				Cell cell6 = row.createCell(cellnum++);
+				cell6.setCellValue(properties.getPriceRange());
+				Cell cell7 = row.createCell(cellnum++);
+				cell7.setCellValue(properties.getLocality());
+				Cell cell8 = row.createCell(cellnum++);
+				cell8.setCellValue(properties.getCity());
+				Cell cell9 = row.createCell(cellnum++);
+				cell9.setCellValue(properties.getState());
+				Cell cell10 = row.createCell(cellnum++);
+				cell10.setCellValue(properties.getPreference());
+			}
+			File excelFile = new File(reportingLocation + "MatchingRequirements.xlsx");
+			OutputStream fos = new FileOutputStream(excelFile);
+			workbook.write(fos);
+			fos.close();
+			System.out.println("MatchingRequirements.xlsx written successfully on disk.");
+			FileInputStream fis = new FileInputStream(excelFile);
+			byte[] buf = new byte[1024];
+			try {
+				for (int readNum; (readNum = fis.read(buf)) != -1;) {
+					stream.write(buf, 0, readNum); // no doubt here is 0
+					System.out.println("read " + readNum + " bytes,");
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+			byte[] bytes = stream.toByteArray();
+
+			HttpHeaders header = new HttpHeaders();
+			header.setContentType(new MediaType("application", "force-download"));
+			header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=MatchingRequirements.xlsx");
+			return resultLeads;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public List<PropertiesDetails> fetchreportdatabetweenpropertyadded(Map<String, Object> request,
 			String reportingLocation) {
 		String phoneNumber = (String) request.get("phone_number");
 		String dateTo = String.valueOf(request.get("dateto"));
@@ -330,7 +433,7 @@ public class PropertiesDetailsService {
 			HttpHeaders header = new HttpHeaders();
 			header.setContentType(new MediaType("application", "force-download"));
 			header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ProductTemplate.xlsx");
-			return new ByteArrayResource(bytes);
+			return resultLeads;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -731,7 +834,7 @@ public class PropertiesDetailsService {
 
 	public void updateImages(Map<String, Object> request, String projectLocation) {
 		List<Map<String, String>> images = (List<Map<String, String>>) request.get("images");
-		String ownerEmail = (String) request.get("ownerEmail");
+		String ownerEmail = (String) request.get("email");
 		String propertyId = (String) request.get("propertyId");
 		List<Images> imageList = imagesRepository
 				.getImageByPropertyId(Integer.parseInt((String) request.get("propertyId")));
@@ -745,6 +848,7 @@ public class PropertiesDetailsService {
 			}
 		});
 		Users userDetails=usersRepository.findByEmail(ownerEmail);
+		System.out.println(userDetails);
 		List<Images> imgList = new ArrayList<>();
 		images.forEach(item -> {
 			Images img = new Images();

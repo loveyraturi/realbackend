@@ -17,9 +17,9 @@ import javax.transaction.Transactional;
 @Transactional
 public interface UsersRepository extends JpaRepository<Users, Integer> {
 	
-	@Query(value="SELECT * FROM users where type='tenant'", nativeQuery = true)
+	@Query(value="SELECT * FROM users", nativeQuery = true)
 	List<Users> findAllTenants();
-	@Query(value="SELECT * FROM users where (email=:type or username=:type) and type='tenant'", nativeQuery = true)
+	@Query(value="SELECT * FROM users where (email=:type or username=:type)", nativeQuery = true)
 	Users searchUserByEmailOrUsername(@Param("type") String type);
 	@Query(value="SELECT * FROM users where (email=:email and password=:password) or (phone_number=:email and password=:password) LIMIT 1", nativeQuery = true)
 	Users validateUser(@Param("email") String email,@Param("password") String password);	
@@ -33,7 +33,7 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 	@Query(value="SELECT * FROM users where email=:email and uuid=:uuid", nativeQuery = true)
 	Users findByEmailAndUuid(@Param("email") String email,@Param("uuid") String uuid);
 	
-	@Query(value="SELECT users.username,users.email,users.phone_number,interested.property_id,interested.status,interested.appointment,interested.emp_proof,interested.emp_type,interested.filename FROM users LEFT JOIN interested on users.username=interested.username where users.id=:id", nativeQuery = true)
+	@Query(value="SELECT users.email,users.phone_number,interested.property_id,interested.status,interested.appointment,interested.emp_proof,interested.emp_type,interested.filename FROM users LEFT JOIN interested on users.email=interested.email where users.id=:id", nativeQuery = true)
 	List<Object[]> findUserDetailsById(@Param("id") int id);
 	
 //	@Query(value="SELECT * FROM users where username=:username", nativeQuery = true)

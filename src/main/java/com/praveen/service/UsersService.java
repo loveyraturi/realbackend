@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mysql.fabric.xmlrpc.base.Array;
 import com.praveen.dao.InterestedRepository;
 import com.praveen.dao.PropertiesDetailsRepository;
 import com.praveen.dao.UsersRepository;
@@ -112,8 +111,10 @@ public class UsersService {
 			if (user.getId() > 0) {
 				// if (user.getOnline() == null) {
 				user.setOnline("1");
-				response.put("status", "true");
+				response.put("status", "true"); 
 				response.put("name", user.getFullName());
+				response.put("email", user.getEmail());
+				response.put("phone_number", user.getPhoneNumber());
 				response.put("message", "Successfully logged in");
 				userRepository.save(user);
 				// } else if ("0".equals(user.getOnline()) || user.getOnline().isEmpty()) {
@@ -210,7 +211,7 @@ public class UsersService {
 		return response;
 	}
 
-	public ByteArrayResource fetchreportdatabetween(Map<String, Object> request, String reportingLocation) {
+	public List<Interested> fetchreportdatabetween(Map<String, Object> request, String reportingLocation) {
 		String phoneNumber = (String) request.get("phone_number");
 		String dateTo = String.valueOf(request.get("dateto"));
 		String dateFrom = String.valueOf(request.get("datefrom"));
@@ -303,7 +304,7 @@ public class UsersService {
 			HttpHeaders header = new HttpHeaders();
 			header.setContentType(new MediaType("application", "force-download"));
 			header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ProductTemplate.xlsx");
-			return new ByteArrayResource(bytes);
+			return resultLeads;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
